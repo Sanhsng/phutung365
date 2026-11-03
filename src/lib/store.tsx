@@ -136,6 +136,11 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   // Khởi tạo: Đọc từ LocalStorage trước để UI tức thì, sau đó đồng bộ Supabase (nếu có)
   useEffect(() => {
+    let localWhs: Warehouse[] = INITIAL_WAREHOUSES;
+    let localAttrs: AttributeDefinition[] = INITIAL_ATTRIBUTES;
+    let localInvLogs: InventoryLog[] = INITIAL_INVENTORY_LOGS;
+    let localSyncLogs: MisaSyncLog[] = INITIAL_SYNC_LOGS;
+
     try {
       const storedWarehouses = localStorage.getItem(STORAGE_KEYS.WAREHOUSES);
       const storedParts = localStorage.getItem(STORAGE_KEYS.PARTS);
@@ -173,20 +178,32 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           }
         });
 
+        localWhs = healedWhs;
         setWarehouses(healedWhs);
         try {
           localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(healedWhs));
         } catch (_) {}
       } else {
+        localWhs = INITIAL_WAREHOUSES;
         setWarehouses(INITIAL_WAREHOUSES);
         try {
           localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(INITIAL_WAREHOUSES));
         } catch (_) {}
       }
+
       if (storedParts) setParts(JSON.parse(storedParts));
-      if (storedAttrs) setAttributes(JSON.parse(storedAttrs));
-      if (storedInvLogs) setInventoryLogs(JSON.parse(storedInvLogs));
-      if (storedSyncLogs) setSyncLogs(JSON.parse(storedSyncLogs));
+      if (storedAttrs) {
+        localAttrs = JSON.parse(storedAttrs);
+        setAttributes(localAttrs);
+      }
+      if (storedInvLogs) {
+        localInvLogs = JSON.parse(storedInvLogs);
+        setInventoryLogs(localInvLogs);
+      }
+      if (storedSyncLogs) {
+        localSyncLogs = JSON.parse(storedSyncLogs);
+        setSyncLogs(localSyncLogs);
+      }
       if (storedHotline) setHotlinePhone(storedHotline);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu phụ tùng từ localStorage:", error);
@@ -194,31 +211,80 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       setIsLoaded(true);
     }
 
-    // Nếu cấu hình Supabase hợp lệ, tải dữ liệu đám mây mới nhất
+    // Nếu cấu hình Supabase hợp lệ, tải và đồng bộ thông minh (Bảo vệ dữ liệu Local vừa nạp)
     if (isSupabaseConfigured()) {
       setIsSupabaseConnected(true);
       fetchAllDataFromSupabase().then((data) => {
-        if (data) {
-          if (data.parts.length > 0) {
-            setParts(data.parts);
-            try { localStorage.setItem(STORAGE_KEYS.PARTS, JSON.stringify(data.parts)); } catch (_) {}
-          }
-          if (data.warehouses.length > 0) {
-            setWarehouses(data.warehouses);
-            try { localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(data.warehouses)); } catch (_) {}
-          }
-          if (data.attributes.length > 0) {
-            setAttributes(data.attributes);
-            try { localStorage.setItem(STORAGE_KEYS.ATTRIBUTES, JSON.stringify(data.attributes)); } catch (_) {}
-          }
-          if (data.inventoryLogs.length > 0) {
-            setInventoryLogs(data.inventoryLogs);
-            try { localStorage.setItem(STORAGE_KEYS.INVENTORY_LOGS, JSON.stringify(data.inventoryLogs)); } catch (_) {}
-          }
-          if (data.syncLogs.length > 0) {
-            setSyncLogs(data.syncLogs);
-            try { localStorage.setItem(STORAGE_KEYS.SYNC_LOGS, JSON.stringify(data.syncLogs)); } catch (_) {}
-          }
+        if (!data) return;
+
+        // 1. Phụ tùng (Parts): Gộp thông minh, tuyệt đối KHÔNG đè mất dữ liệu Local vừa nạp
+        let localParts: Part[] = [];
+        try {
+          const raw = localStorage.getItem(STORAGE_KEYS.PARTS);
+          if (raw) localParts = JSON.parse(raw);
+        } catch (_) {}
+
+        const cloudParts = data.parts || [];
+
+        // Nếu Local có nhiều hơn Cloud (ví dụ vừa import 400 mã mà Supabase mới chỉ có 16 mã):
+        if (localParts.length > cloudParts.length) {
+          // Ưu tiên dữ liệu Local, không để Cloud đè mất
+          setParts(localParts);
+          // Đồng thời đẩy bù toàn bộ lên Supabase để đồng bộ hóa
+          pushAllLocalDataToSupabase({
+            parts: localParts,
+            warehouses: localWhs,
+            attributes: localAttrs,
+            inventoryLogs: localInvLogs,
+            syncLogs: localSyncLogs,
+          }).catch((err) => console.error("Lỗi đẩy bù lên Supabase:", err));
+        } else if (cloudParts.length > 0) {
+          // Cloud có đầy đủ hơn: gộp các mã local chưa có trên cloud nếu có
+          const partsMap = new Map<string, Part>();
+          cloudParts.forEach((cp) => partsMap.set(cp.partNumberClean || cp.id, cp));
+          localParts.forEach((lp) => {
+            const key = lp.partNumberClean || lp.id;
+            if (!partsMap.has(key)) {
+              partsMap.set(key, lp);
+            }
+          });
+          const mergedParts = Array.from(partsMap.values());
+          setParts(mergedParts);
+          try {
+            localStorage.setItem(STORAGE_KEYS.PARTS, JSON.stringify(mergedParts));
+          } catch (_) {}
+        }
+
+        // 2. Kho hàng (Warehouses): Luôn gộp đảm bảo đủ 7 kho
+        if (data.warehouses && data.warehouses.length > 0) {
+          const whMap = new Map<string, Warehouse>();
+          localWhs.forEach((w) => whMap.set(w.id, w));
+          data.warehouses.forEach((w) => {
+            whMap.set(w.id, {
+              ...whMap.get(w.id),
+              ...w,
+              name: getFriendlyWarehouseName(w.id, w.name),
+            });
+          });
+          const finalWhs = Array.from(whMap.values());
+          setWarehouses(finalWhs);
+          try {
+            localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(finalWhs));
+          } catch (_) {}
+        }
+
+        // 3. Thuộc tính & Logs
+        if (data.attributes && data.attributes.length > 0) {
+          setAttributes(data.attributes);
+          try { localStorage.setItem(STORAGE_KEYS.ATTRIBUTES, JSON.stringify(data.attributes)); } catch (_) {}
+        }
+        if (data.inventoryLogs && data.inventoryLogs.length > 0) {
+          setInventoryLogs(data.inventoryLogs);
+          try { localStorage.setItem(STORAGE_KEYS.INVENTORY_LOGS, JSON.stringify(data.inventoryLogs)); } catch (_) {}
+        }
+        if (data.syncLogs && data.syncLogs.length > 0) {
+          setSyncLogs(data.syncLogs);
+          try { localStorage.setItem(STORAGE_KEYS.SYNC_LOGS, JSON.stringify(data.syncLogs)); } catch (_) {}
         }
       });
     }
@@ -797,6 +863,19 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         console.error("Lỗi lưu SyncLogs:", e);
       }
 
+      // TỰ ĐỘNG ĐẨY LÔ PHỤ TÙNG ĐÃ IMPORT LÊN CLOUD SUPABASE NGAY LẬP TỨC
+      if (isSupabaseConfigured()) {
+        pushAllLocalDataToSupabase({
+          parts: updatedPartsList,
+          warehouses: currentWarehouses,
+          attributes,
+          inventoryLogs,
+          syncLogs: updatedSyncLogs,
+        }).catch((err) => {
+          console.error("Lỗi tự động đẩy dữ liệu import lên Supabase:", err);
+        });
+      }
+
       return {
         addedCount,
         updatedCount,
@@ -804,7 +883,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         log: newSyncLog,
       };
     },
-    [parts, warehouses, syncLogs, saveParts]
+    [parts, warehouses, attributes, inventoryLogs, syncLogs, saveParts]
   );
 
   // Khôi phục dữ liệu ban đầu
