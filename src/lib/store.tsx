@@ -37,6 +37,7 @@ import {
   upsertAttributeInSupabase,
   deleteAttributeInSupabase,
   pushAllLocalDataToSupabase,
+  upsertHotlineInSupabase,
 } from "./supabase-service";
 import { isSupabaseConfigured } from "./supabase";
 
@@ -285,6 +286,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         if (data.syncLogs && data.syncLogs.length > 0) {
           setSyncLogs(data.syncLogs);
           try { localStorage.setItem(STORAGE_KEYS.SYNC_LOGS, JSON.stringify(data.syncLogs)); } catch (_) {}
+        }
+        if (data.hotlinePhone) {
+          setHotlinePhone(data.hotlinePhone);
+          try { localStorage.setItem(STORAGE_KEYS.HOTLINE, data.hotlinePhone); } catch (_) {}
         }
       });
     }
@@ -980,8 +985,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem(STORAGE_KEYS.HOTLINE, clean);
     } catch (e) {
-      console.error("Lỗi khi lưu số điện thoại Hotline:", e);
+      console.error("Lỗi khi lưu số điện thoại Hotline vào localStorage:", e);
     }
+    // Tự động lưu lên Supabase đám mây
+    upsertHotlineInSupabase(clean).catch((err) => {
+      console.error("Lỗi khi đẩy Hotline lên Supabase:", err);
+    });
   }, []);
 
   const value = useMemo(

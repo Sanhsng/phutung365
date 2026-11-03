@@ -177,16 +177,59 @@ export async function fetchAllDataFromSupabase() {
 
     if (partsRes.error) throw partsRes.error;
 
+    // Trích xuất số điện thoại hotline dùng chung đã lưu trên Supabase
+    const allAttrRows = attrsRes.data || [];
+    const hotlineRow = allAttrRows.find((a: any) => a.key === "setting_hotline_phone");
+    const hotlinePhone = hotlineRow ? String(hotlineRow.data_type).trim() : null;
+
+    // Loại bỏ các bản ghi setting nội bộ ra khỏi danh mục thuộc tính kỹ thuật
+    const cleanAttrs = allAttrRows
+      .filter((a: any) => !a.key.startsWith("setting_"))
+      .map(mapSupabaseToAttribute);
+
     return {
       parts: (partsRes.data || []).map(mapSupabaseToPart),
       warehouses: (warehousesRes.data || []).map(mapSupabaseToWarehouse),
-      attributes: (attrsRes.data || []).map(mapSupabaseToAttribute),
+      attributes: cleanAttrs,
       inventoryLogs: (logsRes.data || []).map(mapSupabaseToInventoryLog),
       syncLogs: (syncLogsRes.data || []).map(mapSupabaseToMisaSyncLog),
+      hotlinePhone,
     };
   } catch (error) {
     console.error("Lỗi fetch dữ liệu từ Supabase:", error);
     return null;
+  }
+}
+
+export async function upsertHotlineInSupabase(phone: string): Promise<boolean> {
+  if (!supabase || !isSupabaseConfigured()) return false;
+  try {
+    const clean = phone.trim();
+    // 1. Lưu vào bảng attributes (đã có sẵn RLS và hoạt động ngay trên live database)
+    const { error: aErr } = await supabase.from("attributes").upsert({
+      id: "setting_hotline_phone",
+      name: "Hotline & Zalo Dùng Chung",
+      key: "setting_hotline_phone",
+      data_type: clean,
+      options: [],
+      is_public: false,
+    });
+    if (aErr) console.warn("Lỗi lưu hotline vào attributes:", aErr.message);
+
+    // 2. Lưu vào bảng system_settings (nếu đã tạo bảng)
+    try {
+      await supabase.from("system_settings").upsert({
+        key: "hotline_phone",
+        value: clean,
+        description: "Số điện thoại Hotline & Zalo dùng chung toàn hệ thống",
+        updated_at: new Date().toISOString(),
+      });
+    } catch (_) {}
+
+    return true;
+  } catch (error) {
+    console.error("Lỗi lưu số điện thoại hotline lên Supabase:", error);
+    return false;
   }
 }
 
