@@ -753,7 +753,7 @@ export default function AdminDashboardPage() {
                   type="text"
                   value={hotlineInput}
                   onChange={(e) => setHotlineInput(e.target.value)}
-                  placeholder="0909123456"
+                  placeholder="0384911365"
                   className="w-28 sm:w-32 font-mono text-xs font-bold text-slate-900 bg-transparent border-0 p-0 focus:outline-none focus:ring-0"
                 />
               </div>

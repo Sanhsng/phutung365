@@ -128,7 +128,7 @@ const InventoryContext = createContext<InventoryContextValue | null>(null);
 export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
-  const [hotlinePhone, setHotlinePhone] = useState<string>("0909123456");
+  const [hotlinePhone, setHotlinePhone] = useState<string>("0384911365");
   const [warehouses, setWarehouses] = useState<Warehouse[]>(INITIAL_WAREHOUSES);
   const [parts, setParts] = useState<Part[]>(INITIAL_PARTS);
   const [attributes, setAttributes] = useState<AttributeDefinition[]>(INITIAL_ATTRIBUTES);
