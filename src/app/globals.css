@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F7F8FA;
+  --foreground: #172033;
+  --lonking: #FCB710;
+  --lonking-hover: #E09F08;
+  --border-color: #E5EAF0;
+}
+
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle Canvas Background Pattern */
+.bg-canvas {
+  background-color: #F7F8FA;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(252, 183, 16, 0.04) 0px, transparent 40%),
+    radial-gradient(at 100% 100%, rgba(229, 234, 240, 0.6) 0px, transparent 50%);
+}
+
+@layer utilities {
+  /* Liquid Glass Styles (Clean & Subtle, Not Overused) */
+  .liquid-glass-nav {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-bottom: 1px solid rgba(229, 234, 240, 0.8);
+    box-shadow: 0 4px 20px -2px rgba(23, 32, 51, 0.03);
+  }
+
+  .liquid-floating-capsule {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 
+      0 12px 36px -4px rgba(23, 32, 51, 0.12),
+      0 4px 12px -2px rgba(23, 32, 51, 0.06),
+      inset 0 1px 1.5px 0 rgba(255, 255, 255, 1);
+  }
+
+  .saas-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5EAF0;
+    box-shadow: 0 1px 3px 0 rgba(23, 32, 51, 0.02), 0 1px 2px -1px rgba(23, 32, 51, 0.02);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .saas-card:hover {
+    border-color: #CBD5E1;
+    box-shadow: 0 10px 25px -5px rgba(23, 32, 51, 0.06), 0 8px 10px -6px rgba(23, 32, 51, 0.03);
+    transform: translateY(-2px);
+  }
+
+  /* Lonking Yellow Action Buttons */
+  .btn-lonking {
+    background-color: #FCB710;
+    color: #172033;
+    font-weight: 700;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 6px -1px rgba(252, 183, 16, 0.4);
+  }
+  .btn-lonking:hover {
+    background-color: #E09F08;
+    box-shadow: 0 4px 14px 0 rgba(252, 183, 16, 0.5);
+    transform: translateY(-1px);
+  }
+  .btn-lonking:active {
+    transform: translateY(0);
+  }
+
+  /* Active Pill (Image 1 Style) */
+  .pill-lonking-active {
+    background-color: #FCB710;
+    color: #172033;
+    font-weight: 700;
+    box-shadow: 0 2px 6px -1px rgba(252, 183, 16, 0.35);
+  }
+
+  /* Mobile Touch Target standard */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  .liquid-glass-nav,
+  .liquid-floating-capsule {
+    background-color: #FFFFFF;
+  }
+}
+
+/* Modern Minimalist Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Tabular numbers for engineering parts & quantities */
+.tnum,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Accessible reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
