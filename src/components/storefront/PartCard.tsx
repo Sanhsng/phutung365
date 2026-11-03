@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Part } from "@/types/inventory";
+import { useInventory } from "@/lib/store";
 import { HighlightText } from "./HighlightText";
 import { PartSvgPlaceholder } from "./PartSvgPlaceholder";
 import { TechnicalStatusBadge } from "./TechnicalStatusBadge";
@@ -53,12 +54,15 @@ export function PartCard({
     }
   };
 
+  const { hotlinePhone } = useInventory();
+  const cleanHotline = (hotlinePhone || "0909123456").replace(/\D/g, "");
+
   const zaloMessage = encodeURIComponent(
     `Xin chào, tôi cần báo giá phụ tùng [${part.partNumber}] - ${part.name} (Tương thích máy: ${
       part.compatibleModels.join(", ") || "Dùng chung"
     }).`
   );
-  const zaloUrl = `https://zalo.me/0909123456?text=${zaloMessage}`;
+  const zaloUrl = `https://zalo.me/${cleanHotline}?text=${zaloMessage}`;
 
   return (
     <div className="flex flex-col justify-between rounded-xl border border-slate-200/90 bg-white transition-all duration-200 hover:border-slate-300 hover:shadow-md overflow-hidden group">

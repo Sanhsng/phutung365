@@ -18,7 +18,6 @@ import {
   SlidersHorizontal,
   ChevronDown,
   Menu,
-  QrCode,
   Plus,
   RefreshCw,
   Boxes,
@@ -185,13 +184,17 @@ export default function StorefrontPage() {
             Danh Mục Phụ Tùng
           </h1>
 
-          <button
-            onClick={() => setIsMobileFilterOpen(true)}
-            className="p-1.5 -mr-1.5 text-slate-950 hover:bg-black/5 rounded-lg transition-colors"
-            title="Quét mã QR / Barcode"
+          <Link
+            href="/admin"
+            className="h-9 w-9 rounded-full bg-white border border-white/90 overflow-hidden flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-xs p-1 shrink-0"
+            title="Vào trang quản trị kho"
           >
-            <QrCode className="h-5 w-5" />
-          </button>
+            <img
+              src="/images/logo-365.png"
+              alt="Logo Phụ Tùng 365"
+              className="h-full w-full object-contain"
+            />
+          </Link>
         </div>
 
         {/* Ô tìm kiếm dạng viên thuốc (Chuẩn Image 2) */}
@@ -376,10 +379,14 @@ export default function StorefrontPage() {
               {/* User Avatar Circle (Image 1 Style) */}
               <Link
                 href="/admin"
-                className="h-11 w-11 rounded-full bg-slate-900 border-2 border-white/80 overflow-hidden flex items-center justify-center text-white text-xs font-bold hover:scale-105 transition-transform shadow-xs"
+                className="h-11 w-11 rounded-full bg-white border-2 border-white/90 overflow-hidden flex items-center justify-center hover:scale-105 transition-transform shadow-xs p-1"
                 title="Vào trang quản trị kho"
               >
-                365
+                <img
+                  src="/images/logo-365.png"
+                  alt="Logo Phụ Tùng 365"
+                  className="h-full w-full object-contain"
+                />
               </Link>
             </div>
           </div>

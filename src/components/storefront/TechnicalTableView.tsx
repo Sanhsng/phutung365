@@ -62,7 +62,7 @@ export function TechnicalTableView({
               <th className="py-3 px-2">ĐVT</th>
               <th className="py-3 px-3">DÒNG MÁY TƯƠNG THÍCH</th>
               <th className="py-3 px-3">TÌNH TRẠNG</th>
-              <th className="py-3 pl-2 pr-3 text-right">TÁC VỤ</th>
+              <th className="py-3 pl-2 pr-3 text-center">TÁC VỤ</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -192,11 +192,10 @@ export function TechnicalTableView({
 
                       <button
                         onClick={(e) => handleAdd(part, e)}
-                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all ${
-                          isInCart
-                            ? "bg-emerald-600 text-white"
-                            : "btn-lonking"
-                        }`}
+                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all ${isInCart
+                          ? "bg-emerald-600 text-white"
+                          : "btn-lonking"
+                          }`}
                         title="Thêm vào danh sách hỏi giá"
                       >
                         {isInCart ? (

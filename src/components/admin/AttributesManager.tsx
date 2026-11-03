@@ -89,9 +89,9 @@ export function AttributesManager({
     const options =
       dataType === "select"
         ? optionsInput
-            .split(/[,;]+/)
-            .map((s) => s.trim())
-            .filter((s) => s.length > 0)
+          .split(/[,;]+/)
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
         : [];
 
     if (editingId) {
@@ -146,7 +146,7 @@ export function AttributesManager({
             className="inline-flex items-center gap-1.5 rounded-xl btn-lonking px-4 py-2 text-xs font-bold text-slate-950 shadow-xs transition-all active:scale-98"
           >
             <Plus className="h-4 w-4" />
-            + Thêm Thuộc Tính Mới
+            Thêm Thuộc Tính Mới
           </button>
         )}
       </div>

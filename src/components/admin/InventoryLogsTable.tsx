@@ -13,6 +13,7 @@ import {
   Calendar,
   User,
   FileSpreadsheet,
+  Edit3,
 } from "lucide-react";
 
 interface InventoryLogsTableProps {
@@ -72,6 +73,12 @@ export function InventoryLogsTable({ logs }: InventoryLogsTableProps) {
             <ArrowDownRight className="h-3 w-3" /> Xuất kho
           </span>
         );
+      case "edit":
+        return (
+          <span className="inline-flex items-center gap-1 rounded bg-purple-50 border border-purple-200 px-2 py-0.5 text-[11px] font-semibold text-purple-700">
+            <Edit3 className="h-3 w-3" /> Sửa thông tin
+          </span>
+        );
       case "sync":
         return (
           <span className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
@@ -124,6 +131,7 @@ export function InventoryLogsTable({ logs }: InventoryLogsTableProps) {
             <option value="in">Nhập kho</option>
             <option value="out">Xuất kho</option>
             <option value="adjust">Chỉnh tay / Kiểm kê</option>
+            <option value="edit">Sửa thông tin phụ tùng</option>
             <option value="sync">Đồng bộ MISA</option>
           </select>
         </div>

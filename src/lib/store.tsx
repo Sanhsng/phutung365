@@ -31,6 +31,9 @@ import {
   deletePartInSupabase,
   upsertInventoryLogInSupabase,
   upsertMisaSyncLogInSupabase,
+  upsertWarehouseInSupabase,
+  upsertAttributeInSupabase,
+  deleteAttributeInSupabase,
   pushAllLocalDataToSupabase,
 } from "./supabase-service";
 import { isSupabaseConfigured } from "./supabase";
@@ -41,6 +44,7 @@ const STORAGE_KEYS = {
   ATTRIBUTES: "phutung_attributes_v1",
   INVENTORY_LOGS: "phutung_inventory_logs_v1",
   SYNC_LOGS: "phutung_sync_logs_v1",
+  HOTLINE: "phutung_hotline_v1",
 };
 
 export interface AdjustStockParams {
@@ -110,6 +114,9 @@ export interface InventoryContextValue {
   // Supabase Cloud Sync
   isSupabaseConnected: boolean;
   pushToSupabase: () => Promise<{ success: boolean; message: string }>;
+  // Cấu hình Hotline & Liên hệ Zalo
+  hotlinePhone: string;
+  updateHotlinePhone: (phone: string) => void;
 }
 
 const InventoryContext = createContext<InventoryContextValue | null>(null);
@@ -117,6 +124,7 @@ const InventoryContext = createContext<InventoryContextValue | null>(null);
 export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
+  const [hotlinePhone, setHotlinePhone] = useState<string>("0909123456");
   const [warehouses, setWarehouses] = useState<Warehouse[]>(INITIAL_WAREHOUSES);
   const [parts, setParts] = useState<Part[]>(INITIAL_PARTS);
   const [attributes, setAttributes] = useState<AttributeDefinition[]>(INITIAL_ATTRIBUTES);
@@ -131,12 +139,14 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       const storedAttrs = localStorage.getItem(STORAGE_KEYS.ATTRIBUTES);
       const storedInvLogs = localStorage.getItem(STORAGE_KEYS.INVENTORY_LOGS);
       const storedSyncLogs = localStorage.getItem(STORAGE_KEYS.SYNC_LOGS);
+      const storedHotline = localStorage.getItem(STORAGE_KEYS.HOTLINE);
 
       if (storedWarehouses) setWarehouses(JSON.parse(storedWarehouses));
       if (storedParts) setParts(JSON.parse(storedParts));
       if (storedAttrs) setAttributes(JSON.parse(storedAttrs));
       if (storedInvLogs) setInventoryLogs(JSON.parse(storedInvLogs));
       if (storedSyncLogs) setSyncLogs(JSON.parse(storedSyncLogs));
+      if (storedHotline) setHotlinePhone(storedHotline);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu phụ tùng từ localStorage:", error);
     } finally {
@@ -231,15 +241,35 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       const updated = [newPart, ...parts];
       saveParts(updated);
       upsertPartInSupabase(newPart).catch(() => {});
+
+      const addLog: InventoryLog = {
+        id: `log-add-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        partId: newPart.id,
+        partNumber: newPart.partNumber,
+        warehouseId: "wh_mn_pt",
+        warehouseName: "Kho phụ tùng Miền Nam",
+        type: "in",
+        quantityChange: totalDisplayStock,
+        previousQty: 0,
+        newQty: totalDisplayStock,
+        timestamp: new Date().toISOString(),
+        performedBy: "Quản trị viên",
+        notes: `Thêm mới mã phụ tùng [${newPart.partNumber}] vào danh mục`,
+      };
+      saveInventoryLogs([addLog, ...inventoryLogs]);
+      upsertInventoryLogInSupabase(addLog).catch(() => {});
+
       return newPart;
     },
-    [parts, warehouses, saveParts]
+    [parts, warehouses, inventoryLogs, saveParts, saveInventoryLogs]
   );
 
   // Cập nhật thông tin phụ tùng
   const updatePart = useCallback(
     (id: string, updates: Partial<Part>) => {
       let targetUpdated: Part | undefined;
+      const oldPart = parts.find((p) => p.id === id);
+
       const updatedList = parts.map((part) => {
         if (part.id !== id) return part;
 
@@ -263,19 +293,86 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       saveParts(updatedList);
       if (targetUpdated) {
         upsertPartInSupabase(targetUpdated).catch(() => {});
+
+        // Ghi nhật ký kiểm toán thay đổi thông tin phụ tùng
+        if (oldPart) {
+          const changes: string[] = [];
+          if (updates.partNumber && updates.partNumber !== oldPart.partNumber) {
+            changes.push(`Mã [${oldPart.partNumber} → ${updates.partNumber}]`);
+          }
+          if (updates.name && updates.name !== oldPart.name) {
+            changes.push(`Đổi tên`);
+          }
+          if (updates.brand && updates.brand !== oldPart.brand) {
+            changes.push(`Hãng [${updates.brand}]`);
+          }
+          if (updates.unit && updates.unit !== oldPart.unit) {
+            changes.push(`ĐVT [${updates.unit}]`);
+          }
+          if (updates.category && updates.category !== oldPart.category) {
+            changes.push(`Cụm [${updates.category}]`);
+          }
+          if (updates.compatibleModels && JSON.stringify(updates.compatibleModels) !== JSON.stringify(oldPart.compatibleModels)) {
+            changes.push(`Model tương thích`);
+          }
+          if (updates.images && updates.images.length !== oldPart.images?.length) {
+            changes.push(`Cập nhật ảnh`);
+          }
+
+          const changeDesc = changes.length > 0 ? changes.join(", ") : "Cập nhật thông số kỹ thuật";
+          const editLog: InventoryLog = {
+            id: `log-edit-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            partId: id,
+            partNumber: targetUpdated.partNumber,
+            warehouseId: "wh_mn_pt",
+            warehouseName: "Kho phụ tùng Miền Nam",
+            type: "edit",
+            quantityChange: 0,
+            previousQty: targetUpdated.totalDisplayStock,
+            newQty: targetUpdated.totalDisplayStock,
+            timestamp: new Date().toISOString(),
+            performedBy: "Quản trị viên",
+            notes: `Chỉnh sửa thông tin: ${changeDesc}`,
+          };
+
+          const updatedLogs = [editLog, ...inventoryLogs];
+          saveInventoryLogs(updatedLogs);
+          upsertInventoryLogInSupabase(editLog).catch(() => {});
+        }
       }
     },
-    [parts, warehouses, saveParts]
+    [parts, warehouses, inventoryLogs, saveParts, saveInventoryLogs]
   );
 
   // Xóa phụ tùng
   const deletePart = useCallback(
     (id: string) => {
+      const deletedPart = parts.find((p) => p.id === id);
       const updated = parts.filter((p) => p.id !== id);
       saveParts(updated);
       deletePartInSupabase(id).catch(() => {});
+
+      if (deletedPart) {
+        const deleteLog: InventoryLog = {
+          id: `log-del-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          partId: id,
+          partNumber: deletedPart.partNumber,
+          warehouseId: "wh_mn_pt",
+          warehouseName: "Kho phụ tùng Miền Nam",
+          type: "adjust",
+          quantityChange: -deletedPart.totalDisplayStock,
+          previousQty: deletedPart.totalDisplayStock,
+          newQty: 0,
+          timestamp: new Date().toISOString(),
+          performedBy: "Quản trị viên",
+          notes: `Xóa mã phụ tùng [${deletedPart.partNumber}] khỏi hệ thống`,
+        };
+        const updatedLogs = [deleteLog, ...inventoryLogs];
+        saveInventoryLogs(updatedLogs);
+        upsertInventoryLogInSupabase(deleteLog).catch(() => {});
+      }
     },
-    [parts, saveParts]
+    [parts, inventoryLogs, saveParts, saveInventoryLogs]
   );
 
   // Bật/tắt hiển thị phụ tùng (ví dụ ẩn mã QAĐP hoặc mã nội bộ)
@@ -391,6 +488,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         console.error("Lỗi lưu Attributes:", e);
       }
+      upsertAttributeInSupabase(newAttr).catch(() => {});
       return newAttr;
     },
     [attributes]
@@ -398,12 +496,22 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const updateAttributeDefinition = useCallback(
     (id: string, updates: Partial<AttributeDefinition>) => {
-      const updated = attributes.map((a) => (a.id === id ? { ...a, ...updates } : a));
+      let changedAttr: AttributeDefinition | undefined;
+      const updated = attributes.map((a) => {
+        if (a.id === id) {
+          changedAttr = { ...a, ...updates };
+          return changedAttr;
+        }
+        return a;
+      });
       setAttributes(updated);
       try {
         localStorage.setItem(STORAGE_KEYS.ATTRIBUTES, JSON.stringify(updated));
       } catch (e) {
         console.error("Lỗi cập nhật Attributes:", e);
+      }
+      if (changedAttr) {
+        upsertAttributeInSupabase(changedAttr).catch(() => {});
       }
     },
     [attributes]
@@ -418,6 +526,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         console.error("Lỗi xóa Attribute:", e);
       }
+      deleteAttributeInSupabase(id).catch(() => {});
     },
     [attributes]
   );
@@ -436,6 +545,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         console.error("Lỗi lưu SyncLog:", e);
       }
+      upsertMisaSyncLogInSupabase(newSyncLog).catch(() => {});
       return newSyncLog;
     },
     [syncLogs]
@@ -444,14 +554,22 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   // Bật/tắt tính tồn kho lên Web cho từng kho
   const toggleWarehouseWebStock = useCallback(
     (warehouseId: string) => {
-      const updatedWhs = warehouses.map((wh) =>
-        wh.id === warehouseId ? { ...wh, includeInWebStock: !wh.includeInWebStock } : wh
-      );
+      let targetWh: Warehouse | undefined;
+      const updatedWhs = warehouses.map((wh) => {
+        if (wh.id === warehouseId) {
+          targetWh = { ...wh, includeInWebStock: !wh.includeInWebStock };
+          return targetWh;
+        }
+        return wh;
+      });
       setWarehouses(updatedWhs);
       try {
         localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(updatedWhs));
       } catch (e) {
         console.error("Lỗi lưu Warehouses:", e);
+      }
+      if (targetWh) {
+        upsertWarehouseInSupabase(targetWh).catch(() => {});
       }
 
       // Tính lại totalDisplayStock cho toàn bộ phụ tùng
@@ -689,6 +807,16 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     [parts]
   );
 
+  const updateHotlinePhone = useCallback((phone: string) => {
+    const clean = phone.trim();
+    setHotlinePhone(clean);
+    try {
+      localStorage.setItem(STORAGE_KEYS.HOTLINE, clean);
+    } catch (e) {
+      console.error("Lỗi khi lưu số điện thoại Hotline:", e);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       isLoaded,
@@ -698,6 +826,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       attributes,
       inventoryLogs,
       syncLogs,
+      hotlinePhone,
+      updateHotlinePhone,
       addPart,
       updatePart,
       deletePart,
@@ -721,6 +851,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       attributes,
       inventoryLogs,
       syncLogs,
+      hotlinePhone,
+      updateHotlinePhone,
       addPart,
       updatePart,
       deletePart,

@@ -238,6 +238,42 @@ export async function upsertMisaSyncLogInSupabase(log: MisaSyncLog): Promise<boo
   }
 }
 
+export async function upsertWarehouseInSupabase(warehouse: Warehouse): Promise<boolean> {
+  if (!supabase || !isSupabaseConfigured()) return false;
+  try {
+    const { error } = await supabase.from("warehouses").upsert(mapWarehouseToSupabase(warehouse));
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Lỗi lưu kho lên Supabase:", error);
+    return false;
+  }
+}
+
+export async function upsertAttributeInSupabase(attribute: AttributeDefinition): Promise<boolean> {
+  if (!supabase || !isSupabaseConfigured()) return false;
+  try {
+    const { error } = await supabase.from("attributes").upsert(mapAttributeToSupabase(attribute));
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Lỗi lưu thuộc tính lên Supabase:", error);
+    return false;
+  }
+}
+
+export async function deleteAttributeInSupabase(id: string): Promise<boolean> {
+  if (!supabase || !isSupabaseConfigured()) return false;
+  try {
+    const { error } = await supabase.from("attributes").delete().eq("id", id);
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Lỗi xóa thuộc tính trên Supabase:", error);
+    return false;
+  }
+}
+
 export async function pushAllLocalDataToSupabase(data: {
   parts: Part[];
   warehouses: Warehouse[];

@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { Part, AttributeDefinition } from "@/types/inventory";
+import { useInventory } from "@/lib/store";
 import { PartSvgPlaceholder } from "./PartSvgPlaceholder";
 import { TechnicalStatusBadge } from "./TechnicalStatusBadge";
+import { ImageZoomModal } from "./ImageZoomModal";
 import { useToast } from "@/components/ui/Toast";
 import {
   X,
@@ -15,6 +17,7 @@ import {
   ShieldCheck,
   FileText,
   Warehouse as WarehouseIcon,
+  Maximize2,
 } from "lucide-react";
 
 interface PartDetailModalProps {
@@ -33,6 +36,7 @@ export function PartDetailModal({
   publicAttributes,
 }: PartDetailModalProps) {
   const [copied, setCopied] = useState(false);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -67,12 +71,14 @@ export function PartDetailModal({
     }
   };
 
+  const { hotlinePhone } = useInventory();
+  const cleanHotline = (hotlinePhone || "0909123456").replace(/\D/g, "");
+
   const zaloMessage = encodeURIComponent(
-    `Xin chào, tôi cần báo giá phụ tùng [${part.partNumber}] - ${part.name} (Tương thích: ${
-      part.compatibleModels.join(", ") || "Dùng chung"
+    `Xin chào, tôi cần báo giá phụ tùng [${part.partNumber}] - ${part.name} (Tương thích: ${part.compatibleModels.join(", ") || "Dùng chung"
     }).`
   );
-  const zaloUrl = `https://zalo.me/0909123456?text=${zaloMessage}`;
+  const zaloUrl = `https://zalo.me/${cleanHotline}?text=${zaloMessage}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
@@ -109,18 +115,22 @@ export function PartDetailModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Left: Product Media Preview */}
             <div className="space-y-3">
-              <div className="relative aspect-[4/3] w-full rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+              <div
+                onClick={() => setIsZoomOpen(true)}
+                className="group relative aspect-[4/3] w-full rounded-xl border border-slate-200 bg-slate-50 overflow-hidden cursor-zoom-in hover:border-amber-400 hover:shadow-md transition-all"
+                title="Bấm để phóng to ảnh phụ tùng"
+              >
                 {part.images && part.images.length > 0 ? (
                   <img
                     src={part.images[0]}
                     alt={part.name}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                 ) : (
                   <PartSvgPlaceholder
                     category={part.category}
                     partNumber={part.partNumber}
-                    className="h-full w-full"
+                    className="h-full w-full group-hover:scale-105 transition-transform duration-200"
                   />
                 )}
 
@@ -132,6 +142,13 @@ export function PartDetailModal({
 
                 <div className="absolute top-2.5 right-2.5">
                   <TechnicalStatusBadge totalDisplayStock={part.totalDisplayStock} />
+                </div>
+
+                {/* Overlay hover icon phóng to */}
+                <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                  <div className="p-2 rounded-full bg-slate-900/70 text-white backdrop-blur-xs shadow-md">
+                    <Maximize2 className="h-5 w-5" />
+                  </div>
                 </div>
               </div>
 
@@ -277,11 +294,10 @@ export function PartDetailModal({
 
             <button
               onClick={handleAdd}
-              className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-2 text-xs font-bold transition-all touch-target sm:min-h-0 ${
-                isInCart
+              className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-2 text-xs font-bold transition-all touch-target sm:min-h-0 ${isInCart
                   ? "bg-emerald-600 text-white"
                   : "btn-lonking"
-              }`}
+                }`}
             >
               {isInCart ? (
                 <>
@@ -291,13 +307,23 @@ export function PartDetailModal({
               ) : (
                 <>
                   <Plus className="h-4 w-4 text-slate-950" />
-                  <span>+ Thêm vào báo giá</span>
+                  <span>Thêm vào báo giá</span>
                 </>
               )}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Modal Phóng To Ảnh Phụ Tùng */}
+      <ImageZoomModal
+        isOpen={isZoomOpen}
+        onClose={() => setIsZoomOpen(false)}
+        images={part.images}
+        partNumber={part.partNumber}
+        partName={part.name}
+        category={part.category}
+      />
     </div>
   );
 }

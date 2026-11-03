@@ -18,6 +18,14 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Tra cứu & Báo giá Phụ tùng Cơ giới Miền Nam - Lonking OEM",
   description: "Hệ thống tra cứu thông số kỹ thuật, quản trị tồn kho và báo giá phụ tùng máy công trình Lonking, Komatsu, Caterpillar, Kobelco, Hitachi chuyên nghiệp.",
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+      { url: "/images/logo-365.png", type: "image/png" },
+    ],
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({

@@ -138,17 +138,15 @@ export function SidebarFilters({
             <div className="pt-2 space-y-1">
               <button
                 onClick={() => onSelectCategory("Tất cả")}
-                className={`w-full flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition-all ${
-                  selectedCategory === "Tất cả"
-                    ? "bg-slate-900 text-white font-bold shadow-2xs"
-                    : "text-slate-700 hover:bg-slate-50"
-                }`}
+                className={`w-full flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition-all ${selectedCategory === "Tất cả"
+                  ? "bg-slate-900 text-white font-bold shadow-2xs"
+                  : "text-slate-700 hover:bg-slate-50"
+                  }`}
               >
                 <span>Tất cả nhóm</span>
                 <span
-                  className={`font-mono text-[11px] ${
-                    selectedCategory === "Tất cả" ? "text-slate-300" : "text-slate-400"
-                  }`}
+                  className={`font-mono text-[11px] ${selectedCategory === "Tất cả" ? "text-slate-300" : "text-slate-400"
+                    }`}
                 >
                   {totalAvailable}
                 </span>
@@ -160,17 +158,15 @@ export function SidebarFilters({
                   <button
                     key={cat.name}
                     onClick={() => onSelectCategory(cat.name)}
-                    className={`w-full flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition-all ${
-                      active
-                        ? "bg-slate-900 text-white font-bold shadow-2xs"
-                        : "text-slate-700 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition-all ${active
+                      ? "bg-slate-900 text-white font-bold shadow-2xs"
+                      : "text-slate-700 hover:bg-slate-50"
+                      }`}
                   >
                     <span className="truncate text-left">{cat.name}</span>
                     <span
-                      className={`font-mono text-[11px] shrink-0 ml-1.5 ${
-                        active ? "text-lonking-400 font-bold" : "text-slate-400"
-                      }`}
+                      className={`font-mono text-[11px] shrink-0 ml-1.5 ${active ? "text-lonking-400 font-bold" : "text-slate-400"
+                        }`}
                     >
                       {cat.count}
                     </span>
@@ -183,7 +179,7 @@ export function SidebarFilters({
                   onClick={() => setShowAllCategories(!showAllCategories)}
                   className="w-full text-center py-1 text-[11px] font-semibold text-lonking-600 hover:underline"
                 >
-                  {showAllCategories ? "Thu gọn" : `+ Xem thêm ${categories.length - 6} nhóm`}
+                  {showAllCategories ? "Thu gọn" : `=> Xem thêm ${categories.length - 6} nhóm`}
                 </button>
               )}
             </div>
@@ -211,17 +207,15 @@ export function SidebarFilters({
             <div className="pt-2 space-y-1">
               <button
                 onClick={() => onSelectBrand("Tất cả")}
-                className={`w-full flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition-all ${
-                  selectedBrand === "Tất cả"
-                    ? "bg-slate-900 text-white font-bold shadow-2xs"
-                    : "text-slate-700 hover:bg-slate-50"
-                }`}
+                className={`w-full flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition-all ${selectedBrand === "Tất cả"
+                  ? "bg-slate-900 text-white font-bold shadow-2xs"
+                  : "text-slate-700 hover:bg-slate-50"
+                  }`}
               >
                 <span>Tất cả hãng</span>
                 <span
-                  className={`font-mono text-[11px] ${
-                    selectedBrand === "Tất cả" ? "text-slate-300" : "text-slate-400"
-                  }`}
+                  className={`font-mono text-[11px] ${selectedBrand === "Tất cả" ? "text-slate-300" : "text-slate-400"
+                    }`}
                 >
                   {totalAvailable}
                 </span>
@@ -233,17 +227,15 @@ export function SidebarFilters({
                   <button
                     key={b.name}
                     onClick={() => onSelectBrand(b.name)}
-                    className={`w-full flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition-all ${
-                      active
-                        ? "bg-slate-900 text-white font-bold shadow-2xs"
-                        : "text-slate-700 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition-all ${active
+                      ? "bg-slate-900 text-white font-bold shadow-2xs"
+                      : "text-slate-700 hover:bg-slate-50"
+                      }`}
                   >
                     <span className="truncate text-left">{b.name}</span>
                     <span
-                      className={`font-mono text-[11px] shrink-0 ml-1.5 ${
-                        active ? "text-lonking-400 font-bold" : "text-slate-400"
-                      }`}
+                      className={`font-mono text-[11px] shrink-0 ml-1.5 ${active ? "text-lonking-400 font-bold" : "text-slate-400"
+                        }`}
                     >
                       {b.count}
                     </span>

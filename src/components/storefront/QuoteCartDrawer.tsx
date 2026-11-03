@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Part } from "@/types/inventory";
+import { useInventory } from "@/lib/store";
 import * as XLSX from "xlsx";
 import { useToast } from "@/components/ui/Toast";
 import {
@@ -46,6 +47,8 @@ export function QuoteCartDrawer({
   const [note, setNote] = useState("");
   const [copied, setCopied] = useState(false);
   const toast = useToast();
+  const { hotlinePhone } = useInventory();
+  const cleanHotline = (hotlinePhone || "0909123456").replace(/\D/g, "");
 
   if (!isOpen) return null;
 
@@ -76,7 +79,7 @@ export function QuoteCartDrawer({
 
   const handleSendZalo = () => {
     const message = encodeURIComponent(generateQuoteText());
-    const zaloUrl = `https://zalo.me/0909123456?text=${message}`;
+    const zaloUrl = `https://zalo.me/${cleanHotline}?text=${message}`;
     window.open(zaloUrl, "_blank");
     toast.success("Đang mở Zalo", "Nội dung báo giá đã được chuẩn bị sẵn.");
   };

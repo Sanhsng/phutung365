@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Part, AttributeDefinition, PartCategory } from "@/types/inventory";
 import { normalizeCode } from "@/lib/misa-parser";
 import {
@@ -13,6 +13,10 @@ import {
   Sliders,
   Layers,
   Tag,
+  UploadCloud,
+  Trash2,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 
 interface PartEditModalProps {
@@ -47,6 +51,51 @@ const CATEGORIES: PartCategory[] = [
   "Khác",
 ];
 
+/**
+ * Tự động nén và tối ưu ảnh trực tiếp trên trình duyệt (Max width 1000px, JPEG chất lượng 85%)
+ * Đảm bảo hình ảnh sắc nét, dung lượng nhẹ, không lag giao diện.
+ */
+function compressImageFile(file: File, maxDim = 1000, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
+        const compressedDataUrl = canvas.toDataURL(outputType, quality);
+        resolve(compressedDataUrl);
+      };
+      img.onerror = () => resolve(e.target?.result as string);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export function PartEditModal({
   part,
   isOpen,
@@ -68,6 +117,50 @@ export function PartEditModal({
   const [minStockAlert, setMinStockAlert] = useState(5);
   const [isVisible, setIsVisible] = useState(true);
   const [customAttrs, setCustomAttrs] = useState<Record<string, string | number>>({});
+
+  // Chế độ tải ảnh từ máy hoặc URL
+  const [useUrlInput, setUseUrlInput] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chọn file hình ảnh (JPG, PNG, WEBP)!");
+      return;
+    }
+
+    try {
+      setIsProcessingImage(true);
+      const dataUrl = await compressImageFile(file);
+      setImageUrl(dataUrl);
+    } catch (err) {
+      console.error("Lỗi đọc file ảnh:", err);
+    } finally {
+      setIsProcessingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setIsProcessingImage(true);
+      try {
+        const dataUrl = await compressImageFile(file);
+        setImageUrl(dataUrl);
+      } catch (err) {
+        console.error("Lỗi kéo thả ảnh:", err);
+      } finally {
+        setIsProcessingImage(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (part) {
@@ -302,20 +395,142 @@ export function PartEditModal({
             </div>
           </div>
 
-          {/* Image URL & Min Stock Alert */}
+          {/* HÌNH ẢNH SẢN PHẨM & CẢNH BÁO TỒN TỐI THIỂU */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <ImageIcon className="h-3.5 w-3.5 text-slate-500" />
-                Đường dẫn ảnh sản phẩm (URL)
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                  <ImageIcon className="h-3.5 w-3.5 text-slate-500" />
+                  Ảnh phụ tùng
+                </label>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setUseUrlInput(false)}
+                    className={`font-medium transition-colors ${
+                      !useUrlInput ? "text-amber-600 font-bold" : "text-slate-400 hover:text-slate-600"
+                    }`}
+                  >
+                    Tải từ máy
+                  </button>
+                  <span className="text-slate-300">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setUseUrlInput(true)}
+                    className={`font-medium transition-colors ${
+                      useUrlInput ? "text-amber-600 font-bold" : "text-slate-400 hover:text-slate-600"
+                    }`}
+                  >
+                    Nhập link URL
+                  </button>
+                </div>
+              </div>
+
+              {/* Hidden file input */}
               <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://..."
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
               />
+
+              {useUrlInput ? (
+                <div>
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+                  />
+                  {imageUrl && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <img
+                        src={imageUrl}
+                        alt="Preview"
+                        className="h-12 w-12 rounded-lg object-cover border border-slate-200"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setImageUrl("")}
+                        className="text-xs text-rose-500 hover:underline"
+                      >
+                        Xóa ảnh
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : imageUrl ? (
+                /* Đã có ảnh (từ máy tải lên hoặc có sẵn của sản phẩm) */
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                  <div className="relative h-16 w-16 shrink-0 rounded-lg border border-slate-200 bg-white overflow-hidden shadow-2xs">
+                    <img
+                      src={imageUrl}
+                      alt="Ảnh phụ tùng"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 truncate">
+                      {isEditing ? `Ảnh của ${part?.partNumber}` : "Đã chọn ảnh phụ tùng"}
+                    </p>
+                    <p className="text-[11px] text-emerald-600 font-medium">
+                      ✓ Đã tối ưu hiển thị sắc nét
+                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isProcessingImage}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 hover:text-amber-700 hover:underline"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Đổi ảnh khác
+                      </button>
+                      <span className="text-slate-300">·</span>
+                      <button
+                        type="button"
+                        onClick={() => setImageUrl("")}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-500 hover:text-rose-600 hover:underline"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Xóa ảnh
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Chưa có ảnh: Khung kéo thả / click tải từ máy */
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                  className="group flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 hover:border-amber-500 bg-slate-50/60 hover:bg-amber-50/30 p-4 transition-all cursor-pointer text-center"
+                >
+                  {isProcessingImage ? (
+                    <div className="flex items-center gap-2 text-xs font-medium text-amber-600 py-1">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Đang xử lý & tối ưu ảnh...
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-2xs border border-slate-200 group-hover:scale-105 group-hover:border-amber-400 transition-transform mb-1.5 text-amber-600">
+                        <UploadCloud className="h-5 w-5" />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700 group-hover:text-amber-700 transition-colors">
+                        Bấm để tải ảnh từ máy tính lên
+                      </span>
+                      <span className="text-[11px] text-slate-400 mt-0.5">
+                        hoặc kéo thả file ảnh vào đây (JPG, PNG, WEBP)
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>

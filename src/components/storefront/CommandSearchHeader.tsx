@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
+import { useInventory } from "@/lib/store";
 import {
   Search,
   X,
@@ -44,6 +45,8 @@ export function CommandSearchHeader({
   onOpenCart,
   onOpenMobileFilter,
 }: CommandSearchHeaderProps) {
+  const { hotlinePhone } = useInventory();
+  const cleanPhone = (hotlinePhone || "0909123456").replace(/\D/g, "");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Phím tắt '/' hoặc 'Ctrl+K'
@@ -89,12 +92,12 @@ export function CommandSearchHeader({
         {/* Right Action Tools */}
         <div className="flex items-center gap-2 sm:gap-3">
           <a
-            href="tel:0909123456"
+            href={`tel:${cleanPhone}`}
             className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-xs text-slate-700 hover:text-slate-950 hover:bg-slate-50 transition-colors shadow-2xs"
             title="Đường dây nóng kỹ thuật"
           >
             <PhoneCall className="h-3.5 w-3.5 text-lonking-600" />
-            <span className="font-mono font-bold">0909.123.456</span>
+            <span className="font-mono font-bold">{hotlinePhone || "0909.123.456"}</span>
           </a>
 
           <Link

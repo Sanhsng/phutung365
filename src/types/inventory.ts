@@ -63,7 +63,7 @@ export interface InventoryLog {
   partNumber: string;
   warehouseId: string;
   warehouseName: string;
-  type: "in" | "out" | "adjust" | "sync";
+  type: "in" | "out" | "adjust" | "sync" | "edit";
   quantityChange: number;
   previousQty: number;
   newQty: number;

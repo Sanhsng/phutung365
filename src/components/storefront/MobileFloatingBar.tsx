@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useInventory } from "@/lib/store";
 import {
   Home,
   SlidersHorizontal,
@@ -28,6 +29,8 @@ export function MobileFloatingBar({
   onOpenCart,
   cartCount,
 }: MobileFloatingBarProps) {
+  const { hotlinePhone } = useInventory();
+  const cleanHotline = (hotlinePhone || "0909123456").replace(/\D/g, "");
   return (
     <div className="fixed bottom-3 inset-x-0 z-40 px-3 sm:hidden pointer-events-none">
       <nav
@@ -75,7 +78,7 @@ export function MobileFloatingBar({
 
         {/* Hotline Button */}
         <a
-          href="tel:0909123456"
+          href={`tel:${cleanHotline}`}
           className="flex flex-col items-center justify-center flex-1 py-1 px-1 text-slate-700 hover:text-slate-900 transition-colors"
         >
           <PhoneCall className="h-5 w-5 text-lonking-600" />
@@ -84,7 +87,7 @@ export function MobileFloatingBar({
 
         {/* Zalo Button */}
         <a
-          href="https://zalo.me/0909123456"
+          href={`https://zalo.me/${cleanHotline}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col items-center justify-center flex-1 py-1 px-1 text-slate-700 hover:text-slate-900 transition-colors"

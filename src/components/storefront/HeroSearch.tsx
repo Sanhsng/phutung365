@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useInventory } from "@/lib/store";
 import {
   Search,
   X,
@@ -41,6 +42,8 @@ export function HeroSearch({
   cartCount,
   onOpenCart,
 }: HeroSearchProps) {
+  const { hotlinePhone } = useInventory();
+  const cleanPhone = (hotlinePhone || "0909123456").replace(/\D/g, "");
   return (
     <div className="relative overflow-hidden bg-slate-900 text-white border-b border-slate-800">
       {/* Background Decorative Tech Grids */}
@@ -85,11 +88,11 @@ export function HeroSearch({
 
             {/* Hotline Call */}
             <a
-              href="tel:0909123456"
+              href={`tel:${cleanPhone}`}
               className="hidden sm:inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-all duration-200 hover:border-amber-500/50 hover:bg-slate-800 hover:text-white"
             >
               <PhoneCall className="h-3.5 w-3.5 text-amber-400" />
-              <span>Hotline Kho: 0909.123.456</span>
+              <span>Hotline Kho: {hotlinePhone || "0909.123.456"}</span>
             </a>
 
             {/* Cart Drawer Button */}
@@ -113,7 +116,7 @@ export function HeroSearch({
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-8 sm:py-12 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800/90 px-3 py-1 text-xs font-medium text-slate-300 mb-4 backdrop-blur-sm">
           <ShieldCheck className="h-3.5 w-3.5 text-amber-400" />
-          <span>Kho tổng Thủ Đức & Biên Hòa • Hơn 15.000 danh mục phụ tùng chính hãng</span>
+          <span>Kho tổng Hà Nội & Biên Hòa • Hơn 200 danh mục phụ tùng chính hãng</span>
         </div>
 
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
@@ -121,7 +124,7 @@ export function HeroSearch({
         </h1>
         <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto mb-6">
           Hỗ trợ tra cứu <strong className="text-amber-400 font-semibold">một phần mã</strong>, mã chéo OEM,
-          mã MISA hoặc tên máy xúc lật, máy đào Lonking, Liugong, XCMG, Komatsu.
+          mã MISA hoặc tên máy xúc lật, máy đào Lonking, Liugong, XCMG, Lovol.
         </p>
 
         {/* Large Search Input */}
@@ -168,11 +171,10 @@ export function HeroSearch({
               <button
                 key={item.label}
                 onClick={() => onSelectSuggestion(item.label)}
-                className={`rounded-lg px-2.5 py-1 font-mono text-xs font-semibold tracking-tight transition-all duration-200 ${
-                  searchQuery.toUpperCase() === item.label.toUpperCase()
-                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
-                    : "bg-slate-800 text-slate-300 border border-slate-700/80 hover:border-amber-500/60 hover:text-white hover:bg-slate-750"
-                }`}
+                className={`rounded-lg px-2.5 py-1 font-mono text-xs font-semibold tracking-tight transition-all duration-200 ${searchQuery.toUpperCase() === item.label.toUpperCase()
+                  ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
+                  : "bg-slate-800 text-slate-300 border border-slate-700/80 hover:border-amber-500/60 hover:text-white hover:bg-slate-750"
+                  }`}
               >
                 {item.label}
               </button>

@@ -2,8 +2,10 @@
 
 import React, { useState, useMemo } from "react";
 import { Part, AttributeDefinition } from "@/types/inventory";
+import { useInventory } from "@/lib/store";
 import { HighlightText } from "./HighlightText";
 import { PartSvgPlaceholder } from "./PartSvgPlaceholder";
+import { ImageZoomModal } from "./ImageZoomModal";
 import {
   Check,
   Copy,
@@ -18,6 +20,9 @@ import {
   FileText,
   Boxes,
   Info,
+  Wrench,
+  ShieldCheck,
+  Maximize2,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
@@ -47,6 +52,7 @@ export function MasterDetailView({
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
   const toast = useToast();
 
   // Lọc danh sách theo tab: Tất cả, Còn hàng, Hết hàng
@@ -112,10 +118,13 @@ export function MasterDetailView({
     );
   }
 
+  const { hotlinePhone, warehouses } = useInventory();
+  const cleanHotline = (hotlinePhone || "0909123456").replace(/\D/g, "");
+
   const isInCart = selectedPart ? cartItemIds.has(selectedPart.id) : false;
 
   const zaloUrl = selectedPart
-    ? `https://zalo.me/0909123456?text=${encodeURIComponent(
+    ? `https://zalo.me/${cleanHotline}?text=${encodeURIComponent(
         `Chào bạn, tôi cần báo giá phụ tùng [${selectedPart.partNumber}] - ${selectedPart.name} (Tương thích máy: ${
           selectedPart.compatibleModels.join(", ") || "Dùng chung"
         }).`
@@ -408,135 +417,268 @@ export function MasterDetailView({
                 </div>
               </div>
 
-              {/* Ảnh sản phẩm lớn vuông bo góc */}
-              <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-2xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200/90 flex items-center justify-center shadow-inner">
+              {/* Ảnh sản phẩm lớn vuông bo góc - Hỗ trợ bấm phóng to */}
+              <button
+                type="button"
+                onClick={() => setIsZoomOpen(true)}
+                className="group relative h-28 w-28 sm:h-32 sm:w-32 rounded-2xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200/90 flex items-center justify-center shadow-inner cursor-zoom-in hover:border-amber-400 hover:shadow-md transition-all text-left"
+                title="Bấm để xem ảnh phóng to"
+              >
                 {selectedPart.images && selectedPart.images.length > 0 ? (
                   <img
                     src={selectedPart.images[0]}
                     alt={selectedPart.name}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                 ) : (
                   <PartSvgPlaceholder
                     category={selectedPart.category}
                     partNumber={selectedPart.partNumber}
-                    className="h-full w-full"
+                    className="h-full w-full group-hover:scale-105 transition-transform duration-200"
                   />
                 )}
-              </div>
+                {/* Overlay hover icon phóng to */}
+                <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="p-1.5 rounded-full bg-slate-900/70 text-white backdrop-blur-xs shadow-md">
+                    <Maximize2 className="h-4 w-4" />
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
 
-          {/* 4 THẺ THÔNG TIN MODULE (Lưới 2x2) */}
+          {/* 4 THẺ THÔNG TIN MODULE DÀNH CHO TRA CỨU PHỤ TÙNG (Lưới 2x2) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Thẻ A: Thông tin bán hàng */}
+            {/* THẺ 1: THÔNG SỐ KỸ THUẬT & DÒNG MÁY TƯƠNG THÍCH */}
             <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
-              <h4 className="text-sm font-semibold text-slate-800">
-                Thông Tin Bán Hàng
-              </h4>
-              <div className="space-y-2 text-xs">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <Wrench className="h-4 w-4 text-amber-500" />
+                  <span>Thông Số & Lắp Ráp Máy</span>
+                </h4>
+                <span className="text-[11px] font-semibold text-slate-600 font-mono bg-slate-100 px-2 py-0.5 rounded">
+                  {selectedPart.brand}
+                </span>
+              </div>
+
+              <div className="space-y-2.5 text-xs">
+                {/* Dòng máy tương thích */}
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Tài khoản doanh thu</span>
-                  <span className="font-medium text-slate-700">511 - Doanh thu bán phụ tùng cơ giới</span>
+                  <span className="text-slate-400 block text-[11px] font-medium mb-1">Dòng máy tương thích:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedPart.compatibleModels.length > 0 ? (
+                      selectedPart.compatibleModels.map((model, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-md bg-amber-50 border border-amber-200 text-amber-900 font-mono font-bold px-2 py-0.5 text-[11px]"
+                        >
+                          {model}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-slate-500 italic">Dùng chung cho nhiều dòng xe / máy cơ giới</span>
+                    )}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+
+                {/* Phân loại & Hệ thống */}
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-50">
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Thuế GTGT</span>
-                    <span className="font-medium text-slate-700">Chịu thuế (VAT 10%)</span>
+                    <span className="text-slate-400 block text-[11px]">Hệ thống cụm</span>
+                    <span className="font-semibold text-slate-800">{selectedPart.category}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Giá niêm yết</span>
-                    <span className="font-bold text-slate-900">Liên hệ báo giá</span>
+                    <span className="text-slate-400 block text-[11px]">Thương hiệu</span>
+                    <span className="font-semibold text-slate-800">{selectedPart.brand}</span>
                   </div>
                 </div>
+
+                {/* Thuộc tính mở rộng nếu có */}
+                {selectedPart.customAttributes && Object.keys(selectedPart.customAttributes).length > 0 && (
+                  <div className="pt-1 border-t border-slate-50">
+                    <span className="text-slate-400 block text-[11px] mb-1">Đặc tính kỹ thuật:</span>
+                    <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                      {Object.entries(selectedPart.customAttributes).map(([k, v]) => {
+                        const attrDef = publicAttributes.find((a) => a.key === k);
+                        const label = attrDef ? attrDef.name : k;
+                        return (
+                          <div key={k} className="bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                            <span className="text-slate-400 block">{label}:</span>
+                            <span className="font-mono font-bold text-slate-800">{String(v)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* THẺ 2: MÃ PHỤ TÙNG & MÃ TRA CỨU CHÉO */}
+            <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-blue-500" />
+                  <span>Mã Tra Cứu & Mã Chéo</span>
+                </h4>
+                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  Chuẩn OEM
+                </span>
+              </div>
+
+              <div className="space-y-2.5 text-xs">
+                {/* Mã chính */}
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Chính sách bán hàng</span>
-                  <span className="text-slate-500 italic">Bảo hành chính hãng Lonking OEM</span>
+                  <span className="text-slate-400 block text-[11px] font-medium mb-0.5">Mã chính thức (OEM Code):</span>
+                  <div className="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                    <span className="font-mono font-bold text-slate-900 text-xs sm:text-sm">
+                      {selectedPart.partNumber}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(selectedPart.partNumber)}
+                      className="text-slate-400 hover:text-slate-700 transition-colors p-1"
+                      title="Sao chép mã"
+                    >
+                      {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mã tương đương / Mã chéo (Cross-Reference) */}
+                <div>
+                  <span className="text-slate-400 block text-[11px] font-medium mb-1">Mã tương đương / Thay thế chéo:</span>
+                  {selectedPart.crossRefNumbers.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedPart.crossRefNumbers.map((ref, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleCopy(ref)}
+                          className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-md transition-colors"
+                          title="Sao chép mã thay thế"
+                        >
+                          <span>{ref}</span>
+                          <Copy className="h-2.5 w-2.5 text-slate-400" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-slate-500 italic">Mã gốc tiêu chuẩn từ nhà sản xuất</span>
+                  )}
+                </div>
+
+                {/* Mã định danh MISA / Quản lý kho */}
+                <div className="pt-1 border-t border-slate-50 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Mã quản trị hệ thống:</span>
+                  <span className="font-mono text-slate-600 font-medium truncate max-w-[180px]" title={selectedPart.misaRawCode}>
+                    {selectedPart.misaRawCode}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Thẻ B: Thông tin mua hàng & Giá vốn */}
+            {/* THẺ 3: TỒN KHO THỰC TẾ & GIAO HÀNG */}
             <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
-              <h4 className="text-sm font-semibold text-slate-800">
-                Thông Tin Mua Hàng & Giá Vốn
-              </h4>
-              <div className="space-y-2 text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Tài khoản giá vốn</span>
-                  <span className="font-medium text-slate-700">632 - Giá vốn hàng phụ tùng bán</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">Nhà cung cấp</span>
-                    <span className="font-medium text-slate-700">Tập đoàn {selectedPart.brand}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">Giá vốn kho</span>
-                    <span className="font-bold text-slate-900 font-mono">Đồng bộ MISA</span>
-                  </div>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Nguồn gốc xuất xứ</span>
-                  <span className="text-slate-500 italic">Nhập khẩu chính ngạch tiêu chuẩn OEM</span>
-                </div>
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <Boxes className="h-4 w-4 text-emerald-600" />
+                  <span>Tồn Kho & Cung Ứng</span>
+                </h4>
+                <span
+                  className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                    selectedPart.totalDisplayStock > 0
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {selectedPart.totalDisplayStock > 0 ? "Sẵn sàng giao" : "Đặt hàng"}
+                </span>
               </div>
-            </div>
 
-            {/* Thẻ C: Thông tin quản trị kho */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
-              <h4 className="text-sm font-semibold text-slate-800">
-                Thông Tin Quản Trị Kho
-              </h4>
-              <div className="space-y-2 text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Tài khoản kho</span>
-                  <span className="font-medium text-slate-700">156 - Kho phụ tùng Miền Nam</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">Tồn đầu kỳ</span>
-                    <span className="font-medium text-slate-700">
-                      {Math.max(0, selectedPart.totalDisplayStock - 5)} {selectedPart.unit}
+              <div className="space-y-2.5 text-xs">
+                {/* Tồn thực tế khả dụng */}
+                <div className="flex items-baseline justify-between bg-emerald-50/60 border border-emerald-100 rounded-xl p-2.5">
+                  <span className="text-slate-600 font-medium">Tồn khả dụng kho bán:</span>
+                  <div className="text-right">
+                    <span className="text-lg font-black text-emerald-700 font-mono">
+                      {selectedPart.totalDisplayStock}
+                    </span>
+                    <span className="ml-1 text-xs font-semibold text-emerald-800">
+                      {selectedPart.unit}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">Tồn thực tế khả dụng</span>
-                    <span className="font-bold text-emerald-700">
-                      {selectedPart.totalDisplayStock} {selectedPart.unit}
-                    </span>
-                  </div>
+                </div>
+
+                {/* Chi tiết tồn theo kho */}
+                <div className="space-y-1 text-[11px]">
+                  <span className="text-slate-400 block font-medium">Vị trí kho lưu trữ:</span>
+                  {warehouses && warehouses.filter(w => w.includeInWebStock).map(wh => {
+                    const stock = selectedPart.warehouseStocks[wh.id]?.stockQty ?? 0;
+                    return (
+                      <div key={wh.id} className="flex items-center justify-between text-slate-700 py-0.5">
+                        <span className="truncate">{wh.name}</span>
+                        <span className="font-mono font-bold text-slate-900">
+                          {stock > 0 ? `${stock} ${selectedPart.unit}` : "0"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Thời gian giao hàng dự kiến */}
+                <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Tiến độ giao hàng:</span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedPart.totalDisplayStock > 0 ? "Giao nhanh 2 - 4h" : "Liên hệ 2 - 5 ngày"}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Thẻ D: Trạng thái chứng từ & Nút tác vụ */}
+            {/* THẺ 4: BÁO GIÁ & THAO TÁC HỎI HÀNG */}
             <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs flex flex-col justify-between space-y-3">
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">SL chờ xuất hóa đơn</span>
-                  <span className="font-bold text-slate-800 text-sm">0</span>
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-indigo-500" />
+                    <span>Báo Giá & Bảo Hành</span>
+                  </h4>
+                  <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                    Chiết khấu tốt
+                  </span>
                 </div>
-                <div>
-                  <span className="text-slate-400 block text-[11px]">SL chờ thanh toán</span>
-                  <span className="font-bold text-slate-800 text-sm">0</span>
+
+                <div className="space-y-2 text-xs mt-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-[11px]">Đơn giá niêm yết:</span>
+                    <span className="font-bold text-slate-900 bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded text-[11px]">
+                      Liên hệ báo giá ưu đãi
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-[11px]">Chế độ bảo hành:</span>
+                    <span className="font-semibold text-slate-700 text-[11px]">06 - 12 tháng chính hãng</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-[11px]">Hỗ trợ kỹ thuật:</span>
+                    <span className="text-slate-600 text-[11px]">Tư vấn lắp đặt & kiểm tra mã miễn phí</span>
+                  </div>
                 </div>
               </div>
 
               {/* Nút hành động */}
-              <div className="pt-2 flex flex-col sm:flex-row gap-2">
+              <div className="pt-2 flex flex-col sm:flex-row gap-2 border-t border-slate-100">
                 <button
                   onClick={() => onAddToCart(selectedPart)}
                   className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-xs active:scale-95 ${
                     isInCart
-                      ? "bg-emerald-600 text-white"
-                      : "bg-[#544df8] text-white hover:bg-[#463fe6]"
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                      : "btn-lonking text-slate-950"
                   }`}
                 >
                   {isInCart ? (
                     <>
                       <CheckCheck className="h-4 w-4" />
-                      Đã Có Trong Báo Giá
+                      Đã Thêm Vào Giỏ
                     </>
                   ) : (
                     <>
@@ -550,15 +692,27 @@ export function MasterDetailView({
                   href={zaloUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-600 transition-colors shadow-2xs"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100/80 px-3.5 py-2.5 text-xs font-bold text-blue-700 transition-colors shadow-2xs"
                 >
-                  <MessageCircle className="h-4 w-4 text-blue-500" />
+                  <MessageCircle className="h-4 w-4 text-blue-600" />
                   Báo Giá Zalo
                 </a>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Phóng To Ảnh Phụ Tùng */}
+      {selectedPart && (
+        <ImageZoomModal
+          isOpen={isZoomOpen}
+          onClose={() => setIsZoomOpen(false)}
+          images={selectedPart.images}
+          partNumber={selectedPart.partNumber}
+          partName={selectedPart.name}
+          category={selectedPart.category}
+        />
       )}
     </div>
   );

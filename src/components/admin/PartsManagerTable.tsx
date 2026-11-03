@@ -161,7 +161,7 @@ export function PartsManagerTable({
             className="inline-flex items-center gap-2 rounded-xl bg-[#0e1726] hover:bg-[#1a273e] text-white px-4 py-2.5 text-xs font-semibold shadow-xs transition-colors active:scale-95"
           >
             <Plus className="h-4 w-4" />
-            + Thêm phụ tùng mới
+            Thêm phụ tùng mới
           </button>
 
           {/* Chip lọc: Tất cả dữ liệu ✕ */}
@@ -229,23 +229,22 @@ export function PartsManagerTable({
       {/* ======================================================== */}
       <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse min-w-[900px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[760px]">
             <thead className="border-b border-slate-200/80 bg-white text-[11px] font-semibold text-slate-600">
               <tr>
-                <th className="py-3.5 pl-4 pr-2 w-12 text-slate-400 font-mono">STT</th>
-                <th className="py-3.5 px-3">Mã & Tên phụ tùng</th>
-                <th className="py-3.5 px-3">Dòng máy tương thích</th>
-                <th className="py-3.5 px-3">Giá niêm yết</th>
-                <th className="py-3.5 px-3">Tồn kho thực tế</th>
-                <th className="py-3.5 px-3">Kho lưu trữ</th>
-                <th className="py-3.5 px-3">Cập nhật</th>
-                <th className="py-3.5 pl-2 pr-4 text-right">Thao tác</th>
+                <th className="py-3 pl-3 pr-1 w-10 text-slate-400 font-mono text-center">STT</th>
+                <th className="py-3 px-3 w-[220px] lg:w-[260px]">Mã & Tên phụ tùng</th>
+                <th className="py-3 px-2.5 whitespace-nowrap">Dòng máy tương thích</th>
+                <th className="py-3 px-2.5 whitespace-nowrap">Tồn kho thực tế</th>
+                <th className="py-3 px-2.5 whitespace-nowrap">Kho lưu trữ</th>
+                <th className="py-3 px-2 whitespace-nowrap">Cập nhật</th>
+                <th className="py-3 pl-2 pr-3 text-left w-28 min-w-[105px]">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {paginatedParts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
                     Không tìm thấy dữ liệu phụ tùng phù hợp.
                   </td>
                 </tr>
@@ -261,13 +260,13 @@ export function PartsManagerTable({
                       className="hover:bg-slate-50/70 transition-colors"
                     >
                       {/* STT (01, 02, 03...) */}
-                      <td className="py-3.5 pl-4 pr-2 font-mono text-slate-400">
+                      <td className="py-3 pl-3 pr-1 font-mono text-slate-400 text-center">
                         {itemNumber}
                       </td>
 
                       {/* Mã & Tên phụ tùng */}
-                      <td className="py-3.5 px-3">
-                        <div className="flex items-center gap-2.5">
+                      <td className="py-3 px-3 max-w-[220px] lg:max-w-[260px]">
+                        <div className="flex items-center gap-2">
                           <div className="h-7 w-7 rounded-lg bg-slate-100 border border-slate-200/80 overflow-hidden shrink-0 flex items-center justify-center">
                             {part.images && part.images.length > 0 ? (
                               <img
@@ -279,11 +278,11 @@ export function PartsManagerTable({
                               <Package className="h-3.5 w-3.5 text-slate-400" />
                             )}
                           </div>
-                          <div>
-                            <span className="font-semibold text-slate-900 line-clamp-1">
+                          <div className="min-w-0 flex-1">
+                            <span className="font-semibold text-slate-900 truncate block text-xs" title={part.name}>
                               {part.name}
                             </span>
-                            <span className="font-mono text-[10px] text-slate-400">
+                            <span className="font-mono text-[10px] text-slate-400 block truncate">
                               {part.partNumber}
                             </span>
                           </div>
@@ -291,68 +290,60 @@ export function PartsManagerTable({
                       </td>
 
                       {/* Dòng máy tương thích */}
-                      <td className="py-3.5 px-3">
+                      <td className="py-3 px-2.5 whitespace-nowrap">
                         <span className="text-slate-700 font-mono">
                           {part.compatibleModels[0] || "Lonking đa năng"}
                         </span>
                       </td>
 
-                      {/* Giá niêm yết */}
-                      <td className="py-3.5 px-3 font-mono">
-                        <span className="text-slate-800">
-                          Báo giá OEM
-                        </span>
-                      </td>
-
                       {/* Tồn kho thực tế */}
-                      <td className="py-3.5 px-3">
+                      <td className="py-3 px-2.5 whitespace-nowrap">
                         <span
-                          className={`font-mono font-semibold ${
-                            inStock ? "text-slate-900" : "text-rose-600"
-                          }`}
+                          className={`font-mono font-semibold ${inStock ? "text-slate-900" : "text-rose-600"
+                            }`}
                         >
                           {part.totalDisplayStock} {part.unit}
                         </span>
                       </td>
 
                       {/* Kho lưu trữ */}
-                      <td className="py-3.5 px-3 text-slate-600">
+                      <td className="py-3 px-2.5 whitespace-nowrap text-slate-600">
                         Kho Miền Nam
                       </td>
 
                       {/* Ngày cập nhật */}
-                      <td className="py-3.5 px-3 font-mono text-slate-500 text-[11px]">
+                      <td className="py-3 px-2 whitespace-nowrap font-mono text-slate-500 text-[11px]">
                         Hôm nay
                       </td>
 
-                      {/* Thao tác: Mắt xem/kiểm kho, Thùng rác xóa, Bút sửa */}
-                      <td className="py-3.5 pl-2 pr-4 text-right">
-                        <div className="flex items-center justify-end gap-2 text-slate-400">
+                      {/* Thao tác: Mắt xem/kiểm kho, Bút sửa, Thùng rác xóa */}
+                      <td className="py-3 pl-2 pr-3 text-left w-28 min-w-[105px]">
+                        <div className="flex items-center justify-start gap-1.5 text-slate-400 flex-nowrap shrink-0">
                           {/* Eye: Xem / Điều chỉnh tồn kho */}
                           <button
                             onClick={() => onOpenAdjustStock(part)}
-                            className="p-1 hover:text-slate-800 transition-colors"
+                            className="p-1 hover:text-slate-800 transition-colors shrink-0"
                             title="Kiểm kê & điều chỉnh tồn kho"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
 
-                          {/* Trash: Xóa */}
-                          <button
-                            onClick={() => handleDelete(part)}
-                            className="p-1 hover:text-rose-600 transition-colors"
-                            title="Xóa phụ tùng"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-
-                          {/* Edit: Sửa */}
+                          {/* Edit: Sửa - Đưa lên trước để luôn dễ bấm */}
                           <button
                             onClick={() => onOpenEditPart(part)}
-                            className="p-1 hover:text-slate-800 transition-colors"
+                            className="p-1 hover:text-amber-600 transition-colors shrink-0"
                             title="Chỉnh sửa thông số kỹ thuật"
                           >
                             <Edit2 className="h-4 w-4" />
+                          </button>
+
+                          {/* Trash: Xóa */}
+                          <button
+                            onClick={() => handleDelete(part)}
+                            className="p-1 hover:text-rose-600 transition-colors shrink-0"
+                            title="Xóa phụ tùng"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
