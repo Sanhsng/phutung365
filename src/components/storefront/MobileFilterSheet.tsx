@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { X, RotateCcw, Check, Filter } from "lucide-react";
-import { SidebarFilters } from "./SidebarFilters";
+import { SidebarFilters, WarehouseOption } from "./SidebarFilters";
 
 interface CategoryCount {
   name: string;
@@ -23,6 +23,9 @@ interface MobileFilterSheetProps {
   brands: BrandCount[];
   selectedBrand: string;
   onSelectBrand: (brand: string) => void;
+  warehouses?: WarehouseOption[];
+  selectedWarehouse?: string;
+  onSelectWarehouse?: (whId: string) => void;
   onlyInStock: boolean;
   onToggleOnlyInStock: () => void;
   totalFiltered: number;
@@ -43,6 +46,9 @@ export function MobileFilterSheet({
   brands,
   selectedBrand,
   onSelectBrand,
+  warehouses = [],
+  selectedWarehouse = "all",
+  onSelectWarehouse,
   onlyInStock,
   onToggleOnlyInStock,
   totalFiltered,
@@ -106,6 +112,9 @@ export function MobileFilterSheet({
             brands={brands}
             selectedBrand={selectedBrand}
             onSelectBrand={onSelectBrand}
+            warehouses={warehouses}
+            selectedWarehouse={selectedWarehouse}
+            onSelectWarehouse={onSelectWarehouse}
             onlyInStock={onlyInStock}
             onToggleOnlyInStock={onToggleOnlyInStock}
             totalFiltered={totalFiltered}

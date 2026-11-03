@@ -23,6 +23,7 @@ import {
   Wrench,
   ShieldCheck,
   Maximize2,
+  MapPin,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
@@ -47,29 +48,79 @@ export function MasterDetailView({
   publicAttributes,
   onOpenDetailModal,
 }: MasterDetailViewProps) {
+  const { hotlinePhone, warehouses } = useInventory();
   const [selectedPartId, setSelectedPartId] = useState<string>(parts[0]?.id || "");
   const [filterTab, setFilterTab] = useState<"all" | "active" | "inactive">("all");
+  const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState<string>("all");
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const toast = useToast();
 
+  // Đếm số lượng theo từng kho
+  const warehouseCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    warehouses.forEach((wh) => {
+      counts[wh.id] = parts.filter(
+        (p) => (p.warehouseStocks?.[wh.id]?.stockQty ?? 0) > 0
+      ).length;
+    });
+    return counts;
+  }, [warehouses, parts]);
+
+  // Lọc theo kho trước
+  const partsByWarehouse = useMemo(() => {
+    if (selectedWarehouseFilter === "all") return parts;
+    return parts.filter(
+      (p) => (p.warehouseStocks?.[selectedWarehouseFilter]?.stockQty ?? 0) > 0
+    );
+  }, [parts, selectedWarehouseFilter]);
+
   // Lọc danh sách theo tab: Tất cả, Còn hàng, Hết hàng
   const filteredList = useMemo(() => {
     if (filterTab === "active") {
-      return parts.filter((p) => p.totalDisplayStock > 0);
+      return partsByWarehouse.filter((p) => {
+        if (selectedWarehouseFilter !== "all") {
+          return (p.warehouseStocks?.[selectedWarehouseFilter]?.stockQty ?? 0) > 0;
+        }
+        return p.totalDisplayStock > 0;
+      });
     }
     if (filterTab === "inactive") {
-      return parts.filter((p) => p.totalDisplayStock <= 0);
+      return partsByWarehouse.filter((p) => {
+        if (selectedWarehouseFilter !== "all") {
+          return (p.warehouseStocks?.[selectedWarehouseFilter]?.stockQty ?? 0) <= 0;
+        }
+        return p.totalDisplayStock <= 0;
+      });
     }
-    return parts;
-  }, [parts, filterTab]);
+    return partsByWarehouse;
+  }, [partsByWarehouse, filterTab, selectedWarehouseFilter]);
 
-  const activeCount = useMemo(() => parts.filter((p) => p.totalDisplayStock > 0).length, [parts]);
-  const inactiveCount = useMemo(() => parts.filter((p) => p.totalDisplayStock <= 0).length, [parts]);
+  const activeCount = useMemo(() => {
+    if (selectedWarehouseFilter !== "all") {
+      return parts.filter(
+        (p) => (p.warehouseStocks?.[selectedWarehouseFilter]?.stockQty ?? 0) > 0
+      ).length;
+    }
+    return parts.filter((p) => p.totalDisplayStock > 0).length;
+  }, [parts, selectedWarehouseFilter]);
 
-  const selectedPart = parts.find((p) => p.id === selectedPartId) || filteredList[0] || parts[0];
+  const inactiveCount = useMemo(() => {
+    if (selectedWarehouseFilter !== "all") {
+      return parts.filter(
+        (p) => (p.warehouseStocks?.[selectedWarehouseFilter]?.stockQty ?? 0) <= 0
+      ).length;
+    }
+    return parts.filter((p) => p.totalDisplayStock <= 0).length;
+  }, [parts, selectedWarehouseFilter]);
+
+  const selectedPart =
+    filteredList.find((p) => p.id === selectedPartId) ||
+    filteredList[0] ||
+    parts.find((p) => p.id === selectedPartId) ||
+    parts[0];
 
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -118,7 +169,6 @@ export function MasterDetailView({
     );
   }
 
-  const { hotlinePhone, warehouses } = useInventory();
   const cleanHotline = (hotlinePhone || "0909123456").replace(/\D/g, "");
 
   const isInCart = selectedPart ? cartItemIds.has(selectedPart.id) : false;
@@ -137,6 +187,26 @@ export function MasterDetailView({
       {/* CỘT TRÁI: MASTER LIST (Danh sách tổng quan)             */}
       {/* ======================================================== */}
       <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 flex flex-col">
+        {/* Bộ lọc Vị trí Kho */}
+        <div className="mb-2.5 flex items-center justify-between gap-2 bg-slate-50/80 border border-slate-200/80 rounded-xl px-2.5 py-1.5">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 shrink-0">
+            <MapPin className="h-3.5 w-3.5 text-lonking-600 shrink-0" />
+            <span>Kho:</span>
+          </div>
+          <select
+            value={selectedWarehouseFilter}
+            onChange={(e) => setSelectedWarehouseFilter(e.target.value)}
+            className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+          >
+            <option value="all">Tất cả kho ({parts.length} mã)</option>
+            {warehouses.map((wh) => (
+              <option key={wh.id} value={wh.id}>
+                {wh.name} ({warehouseCounts[wh.id] ?? 0} mã)
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Hàng nút lọc dạng viên thuốc (Tất cả, Còn hàng, Hết hàng) */}
         <div className="flex items-center gap-2 mb-3">
           <button
@@ -147,7 +217,7 @@ export function MasterDetailView({
                 : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
             }`}
           >
-            Tất cả ({parts.length})
+            Tất cả ({partsByWarehouse.length})
           </button>
 
           <button
@@ -206,7 +276,10 @@ export function MasterDetailView({
               const isSelected = selectedPart?.id === part.id;
               const isChecked = checkedIds.has(part.id);
               const hasImg = part.images && part.images.length > 0;
-              const inStock = part.totalDisplayStock > 0;
+              const itemStock = selectedWarehouseFilter !== "all"
+                ? (part.warehouseStocks?.[selectedWarehouseFilter]?.stockQty ?? 0)
+                : part.totalDisplayStock;
+              const inStock = itemStock > 0;
 
               return (
                 <div
@@ -257,7 +330,7 @@ export function MasterDetailView({
                         }`}
                       />
                       <span>
-                        Tồn: <strong className="text-slate-700">{part.totalDisplayStock} {part.unit}</strong>
+                        Tồn: <strong className="text-slate-700">{itemStock} {part.unit}</strong>
                       </span>
                     </div>
                   </div>

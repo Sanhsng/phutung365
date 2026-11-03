@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
+  MapPin,
 } from "lucide-react";
 
 interface PartsManagerTableProps {
@@ -43,6 +44,7 @@ export function PartsManagerTable({
 }: PartsManagerTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedWarehouse, setSelectedWarehouse] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -61,6 +63,11 @@ export function PartsManagerTable({
     return parts.filter((part) => {
       if (selectedCategory !== "all" && part.category !== selectedCategory) {
         return false;
+      }
+
+      if (selectedWarehouse !== "all") {
+        const whStock = part.warehouseStocks[selectedWarehouse]?.stockQty ?? 0;
+        if (whStock <= 0) return false;
       }
 
       if (statusFilter === "visible" && !part.isVisible) return false;
@@ -169,6 +176,7 @@ export function PartsManagerTable({
             onClick={() => {
               setSearchQuery("");
               setSelectedCategory("all");
+              setSelectedWarehouse("all");
               setStatusFilter("all");
             }}
             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition-colors shadow-2xs"
@@ -177,7 +185,27 @@ export function PartsManagerTable({
             <X className="h-3.5 w-3.5 text-slate-400" />
           </button>
 
-          {/* Nút lọc mở rộng */}
+          {/* Bộ lọc Kho lưu trữ */}
+          <div className="relative">
+            <select
+              value={selectedWarehouse}
+              onChange={(e) => {
+                setSelectedWarehouse(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="appearance-none inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 pl-3 pr-7 py-2 text-xs font-medium text-slate-700 transition-colors shadow-2xs cursor-pointer focus:outline-none"
+            >
+              <option value="all">Tất cả kho ({warehouses.length} kho)</option>
+              {warehouses.map((wh) => (
+                <option key={wh.id} value={wh.id}>
+                  {wh.name} {wh.includeInWebStock ? "" : "(Nội bộ)"}
+                </option>
+              ))}
+            </select>
+            <MapPin className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+          </div>
+
+          {/* Nút lọc mở rộng nhóm */}
           <div className="relative">
             <select
               value={selectedCategory}
@@ -302,13 +330,35 @@ export function PartsManagerTable({
                           className={`font-mono font-semibold ${inStock ? "text-slate-900" : "text-rose-600"
                             }`}
                         >
-                          {part.totalDisplayStock} {part.unit}
+                          {selectedWarehouse !== "all"
+                            ? `${part.warehouseStocks[selectedWarehouse]?.stockQty ?? 0} ${part.unit}`
+                            : `${part.totalDisplayStock} ${part.unit}`}
                         </span>
                       </td>
 
                       {/* Kho lưu trữ */}
                       <td className="py-3 px-2.5 whitespace-nowrap text-slate-600">
-                        Kho Miền Nam
+                        {selectedWarehouse !== "all" ? (
+                          <span className="font-semibold text-slate-800">
+                            {warehouses.find((w) => w.id === selectedWarehouse)?.name || "Kho"}
+                          </span>
+                        ) : (
+                          (() => {
+                            const stockedWhs = warehouses.filter(
+                              (w) => (part.warehouseStocks[w.id]?.stockQty ?? 0) > 0
+                            );
+                            if (stockedWhs.length === 0) return <span className="text-slate-400">Hết hàng</span>;
+                            if (stockedWhs.length === 1) return <span>{stockedWhs[0].name}</span>;
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1 font-medium text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md text-[11px]"
+                                title={stockedWhs.map((w) => `${w.name}: ${part.warehouseStocks[w.id]?.stockQty ?? 0} ${part.unit}`).join("\n")}
+                              >
+                                {stockedWhs.length} kho có hàng
+                              </span>
+                            );
+                          })()
+                        )}
                       </td>
 
                       {/* Ngày cập nhật */}

@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Filter, RotateCcw, ChevronDown, ChevronUp, Check, Layers, Tag, Box } from "lucide-react";
+import { Filter, RotateCcw, ChevronDown, ChevronUp, Check, Layers, Tag, Box, MapPin } from "lucide-react";
+
+export interface WarehouseOption {
+  id: string;
+  name: string;
+  count: number;
+}
 
 interface CategoryCount {
   name: string;
@@ -20,6 +26,9 @@ interface SidebarFiltersProps {
   brands: BrandCount[];
   selectedBrand: string;
   onSelectBrand: (brand: string) => void;
+  warehouses?: WarehouseOption[];
+  selectedWarehouse?: string;
+  onSelectWarehouse?: (whId: string) => void;
   onlyInStock: boolean;
   onToggleOnlyInStock: () => void;
   totalFiltered: number;
@@ -35,6 +44,9 @@ export function SidebarFilters({
   brands,
   selectedBrand,
   onSelectBrand,
+  warehouses = [],
+  selectedWarehouse = "all",
+  onSelectWarehouse,
   onlyInStock,
   onToggleOnlyInStock,
   totalFiltered,
@@ -43,6 +55,7 @@ export function SidebarFilters({
   isMobileModal = false,
 }: SidebarFiltersProps) {
   const [openSections, setOpenSections] = useState({
+    warehouse: true,
     stock: true,
     categories: true,
     brands: true,
@@ -51,12 +64,15 @@ export function SidebarFilters({
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showAllBrands, setShowAllBrands] = useState(false);
 
-  const toggleSection = (section: "stock" | "categories" | "brands") => {
+  const toggleSection = (section: "warehouse" | "stock" | "categories" | "brands") => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
   const isFiltered =
-    selectedCategory !== "Tất cả" || selectedBrand !== "Tất cả" || onlyInStock;
+    selectedCategory !== "Tất cả" ||
+    selectedBrand !== "Tất cả" ||
+    onlyInStock ||
+    (selectedWarehouse && selectedWarehouse !== "all");
 
   const displayedCategories = showAllCategories ? categories : categories.slice(0, 6);
   const displayedBrands = showAllBrands ? brands : brands.slice(0, 6);
@@ -81,6 +97,63 @@ export function SidebarFilters({
             </button>
           )}
         </div>
+
+        {/* Section 0: Warehouse Location Filter */}
+        {warehouses && warehouses.length > 0 && onSelectWarehouse && (
+          <div className="py-3">
+            <button
+              onClick={() => toggleSection("warehouse")}
+              className="w-full flex items-center justify-between text-xs font-bold text-slate-800 uppercase tracking-wide py-1"
+            >
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-lonking-600" />
+                Vị Trí Kho ({warehouses.length})
+              </span>
+              {openSections.warehouse ? (
+                <ChevronUp className="h-4 w-4 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+              )}
+            </button>
+
+            {openSections.warehouse && (
+              <div className="space-y-1 pt-2">
+                {/* Tất cả kho */}
+                <button
+                  onClick={() => onSelectWarehouse("all")}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
+                    selectedWarehouse === "all"
+                      ? "btn-lonking text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50 font-medium"
+                  }`}
+                >
+                  <span className="truncate">Tất cả kho</span>
+                  <span className="text-[10px] font-mono text-slate-500 font-semibold">
+                    {totalAvailable}
+                  </span>
+                </button>
+
+                {/* Danh sách từng kho */}
+                {warehouses.map((wh) => (
+                  <button
+                    key={wh.id}
+                    onClick={() => onSelectWarehouse(wh.id)}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
+                      selectedWarehouse === wh.id
+                        ? "btn-lonking text-slate-950 font-bold shadow-xs"
+                        : "text-slate-600 hover:bg-slate-50 font-medium"
+                    }`}
+                  >
+                    <span className="truncate">{wh.name}</span>
+                    <span className="text-[10px] font-mono text-slate-500 font-semibold">
+                      {wh.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Section 1: Availability Status */}
         <div className="py-3">

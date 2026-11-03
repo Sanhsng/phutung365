@@ -30,12 +30,13 @@ import {
 } from "lucide-react";
 
 export default function StorefrontPage() {
-  const { parts, attributes, isLoaded } = useInventory();
+  const { parts, attributes, isLoaded, warehouses } = useInventory();
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [selectedModel, setSelectedModel] = useState("Tất cả");
+  const [selectedWarehouse, setSelectedWarehouse] = useState("all");
   const [onlyInStock, setOnlyInStock] = useState(false);
 
   // Top Canvas Capsule Navigation Tab (Image 1 Style): "products" | "price_lists" | "stock_adjustments"
@@ -109,6 +110,17 @@ export default function StorefrontPage() {
     return ["Tất cả", ...Array.from(set)];
   }, [visibleParts]);
 
+  // Danh sách vị trí kho kèm số lượng tồn
+  const warehouseOptions = useMemo(() => {
+    return warehouses.map((wh) => ({
+      id: wh.id,
+      name: wh.name,
+      count: visibleParts.filter(
+        (p) => (p.warehouseStocks?.[wh.id]?.stockQty ?? 0) > 0
+      ).length,
+    }));
+  }, [warehouses, visibleParts]);
+
   const publicAttributes = useMemo(() => {
     return attributes.filter((attr) => attr.isPublic);
   }, [attributes]);
@@ -124,6 +136,10 @@ export default function StorefrontPage() {
       }
       if (selectedModel !== "Tất cả" && !part.compatibleModels.includes(selectedModel)) {
         return false;
+      }
+      if (selectedWarehouse !== "all") {
+        const whStock = part.warehouseStocks?.[selectedWarehouse]?.stockQty ?? 0;
+        if (whStock <= 0) return false;
       }
       if (onlyInStock && part.totalDisplayStock <= 0) {
         return false;
@@ -147,7 +163,7 @@ export default function StorefrontPage() {
         part.compatibleModels.some((m) => m.toLowerCase().includes(rawQuery))
       );
     });
-  }, [visibleParts, searchQuery, selectedCategory, selectedModel, onlyInStock]);
+  }, [visibleParts, searchQuery, selectedCategory, selectedModel, selectedWarehouse, onlyInStock]);
 
   if (!isLoaded) {
     return (
@@ -219,18 +235,30 @@ export default function StorefrontPage() {
           </div>
         </div>
 
-        {/* Hàng lọc nhanh: Nhóm: Tất cả ⌵  Dòng máy: Tất cả ⌵ (Chuẩn Image 2) */}
-        <div className="px-4 py-2 flex items-center justify-between text-xs text-slate-600 border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-1 cursor-pointer" onClick={() => setIsMobileFilterOpen(true)}>
+        {/* Hàng lọc nhanh: Nhóm: Tất cả ⌵  Kho: Tất cả ⌵  Dòng máy: Tất cả ⌵ (Chuẩn Image 2) */}
+        <div className="px-4 py-2 flex items-center justify-between text-xs text-slate-600 border-b border-slate-100 pb-3 gap-2">
+          <div className="flex items-center gap-1 cursor-pointer truncate" onClick={() => setIsMobileFilterOpen(true)}>
             <span>Nhóm:</span>
-            <strong className="text-slate-900 font-semibold">{selectedCategory}</strong>
-            <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            <strong className="text-slate-900 font-semibold truncate max-w-[80px]">{selectedCategory}</strong>
+            <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
           </div>
 
-          <div className="flex items-center gap-1 cursor-pointer" onClick={() => setIsMobileFilterOpen(true)}>
-            <span>Dòng máy:</span>
-            <strong className="text-slate-900 font-semibold">{selectedModel === "Tất cả" ? "Tất cả" : selectedModel}</strong>
-            <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+          <div className="flex items-center gap-1 cursor-pointer truncate" onClick={() => setIsMobileFilterOpen(true)}>
+            <span>Kho:</span>
+            <strong className="text-slate-900 font-semibold truncate max-w-[90px]">
+              {selectedWarehouse === "all"
+                ? "Tất cả"
+                : warehouses.find((w) => w.id === selectedWarehouse)?.name.replace("Kho ", "") || "Kho"}
+            </strong>
+            <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+          </div>
+
+          <div className="flex items-center gap-1 cursor-pointer truncate" onClick={() => setIsMobileFilterOpen(true)}>
+            <span>Máy:</span>
+            <strong className="text-slate-900 font-semibold truncate max-w-[70px]">
+              {selectedModel === "Tất cả" ? "Tất cả" : selectedModel}
+            </strong>
+            <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
           </div>
         </div>
 
@@ -479,6 +507,9 @@ export default function StorefrontPage() {
         }))}
         selectedBrand="Tất cả"
         onSelectBrand={() => { }}
+        warehouses={warehouseOptions}
+        selectedWarehouse={selectedWarehouse}
+        onSelectWarehouse={setSelectedWarehouse}
         onlyInStock={onlyInStock}
         onToggleOnlyInStock={() => setOnlyInStock(!onlyInStock)}
         totalFiltered={filteredParts.length}
@@ -486,6 +517,7 @@ export default function StorefrontPage() {
         onResetFilters={() => {
           setSelectedCategory("Tất cả");
           setSelectedModel("Tất cả");
+          setSelectedWarehouse("all");
           setOnlyInStock(false);
           setSearchQuery("");
         }}
