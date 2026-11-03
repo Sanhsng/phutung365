@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Part, Warehouse } from "@/types/inventory";
+import { getFriendlyWarehouseName } from "@/lib/seed-data";
 import {
   X,
   Boxes,
@@ -131,7 +132,7 @@ export function StockAdjustModal({
             >
               {warehouses.map((wh) => (
                 <option key={wh.id} value={wh.id}>
-                  {wh.name} {wh.includeInWebStock ? "(Kho tính Web)" : "(Kho nội bộ)"}
+                  {getFriendlyWarehouseName(wh.id, wh.name)} {wh.includeInWebStock ? "(Kho tính Web)" : "(Kho nội bộ)"}
                 </option>
               ))}
             </select>

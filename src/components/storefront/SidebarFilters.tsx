@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Filter, RotateCcw, ChevronDown, ChevronUp, Check, Layers, Tag, Box, MapPin } from "lucide-react";
+import { getFriendlyWarehouseName } from "@/lib/seed-data";
 
 export interface WarehouseOption {
   id: string;
@@ -144,7 +145,7 @@ export function SidebarFilters({
                         : "text-slate-600 hover:bg-slate-50 font-medium"
                     }`}
                   >
-                    <span className="truncate">{wh.name}</span>
+                    <span className="truncate">{getFriendlyWarehouseName(wh.id, wh.name)}</span>
                     <span className="text-[10px] font-mono text-slate-500 font-semibold">
                       {wh.count}
                     </span>

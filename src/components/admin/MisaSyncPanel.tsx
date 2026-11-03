@@ -44,6 +44,7 @@ interface MisaSyncPanelProps {
       rawName: string;
       unit: string;
       warehouseId: string;
+      warehouseName?: string;
       openQty: number;
       inQty: number;
       outQty: number;
@@ -476,6 +477,7 @@ export function MisaSyncPanel({
       rawName: r.rawName,
       unit: r.unit,
       warehouseId: r.warehouseId,
+      warehouseName: r.warehouseName,
       openQty: r.openQty,
       inQty: r.inQty,
       outQty: r.outQty,

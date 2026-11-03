@@ -64,8 +64,48 @@ export const INITIAL_WAREHOUSES: Warehouse[] = [
 ];
 
 /**
+ * Bản đồ chuyển đổi ID kỹ thuật sang tên tiếng Việt chuẩn của từng kho
+ */
+export const WAREHOUSE_NAME_MAP: Record<string, string> = {
+  wh_mn_pt: "Kho phụ tùng Miền Nam",
+  wh_mb_pt: "Kho phụ tùng Miền Bắc",
+  wh_bh_bienhoa: "Kho Biên Hòa",
+  wh_mn_bh: "Kho bảo hành MN",
+  wh_mb_bh: "Kho bảo hành MB",
+  wh_mn_tang: "Kho PT tặng theo xe MN",
+  wh_mb_tang: "Kho PT tặng theo xe MB",
+};
+
+/**
+ * Hàm lấy tên kho thân thiện, đảm bảo không bao giờ hiển thị mã kỹ thuật (wh_...)
+ */
+export function getFriendlyWarehouseName(id: string, name?: string): string {
+  if (name && !name.startsWith("wh_") && name !== id) {
+    return name;
+  }
+  return WAREHOUSE_NAME_MAP[id] || name || id;
+}
+
+/**
  * Danh mục thuộc tính động cấu hình cho phụ tùng
  */
+export const WAREHOUSE_NAME_MAP: Record<string, string> = {
+  wh_mn_pt: "Kho phụ tùng Miền Nam",
+  wh_mb_pt: "Kho phụ tùng Miền Bắc",
+  wh_bh_bienhoa: "Kho Biên Hòa",
+  wh_mn_bh: "Kho bảo hành MN",
+  wh_mb_bh: "Kho bảo hành MB",
+  wh_mn_tang: "Kho PT tặng theo xe MN",
+  wh_mb_tang: "Kho PT tặng theo xe MB",
+};
+
+export function getFriendlyWarehouseName(id: string, name?: string): string {
+  if (name && !name.startsWith("wh_") && name !== id) {
+    return name;
+  }
+  return WAREHOUSE_NAME_MAP[id] || name || id;
+}
+
 export const INITIAL_ATTRIBUTES: AttributeDefinition[] = [
   {
     id: "attr_thread_size",
@@ -118,6 +158,29 @@ export const INITIAL_ATTRIBUTES: AttributeDefinition[] = [
 ];
 
 /**
+ * Bản đồ chuyển đổi ID kỹ thuật sang tên tiếng Việt chuẩn của từng kho
+ */
+export const WAREHOUSE_NAME_MAP: Record<string, string> = {
+  wh_mn_pt: "Kho phụ tùng Miền Nam",
+  wh_mb_pt: "Kho phụ tùng Miền Bắc",
+  wh_bh_bienhoa: "Kho Biên Hòa",
+  wh_mn_bh: "Kho bảo hành MN",
+  wh_mb_bh: "Kho bảo hành MB",
+  wh_mn_tang: "Kho PT tặng theo xe MN",
+  wh_mb_tang: "Kho PT tặng theo xe MB",
+};
+
+/**
+ * Hàm lấy tên kho thân thiện, đảm bảo không bao giờ hiển thị mã kỹ thuật (wh_...)
+ */
+export function getFriendlyWarehouseName(id: string, name?: string): string {
+  if (name && !name.startsWith("wh_") && name !== id) {
+    return name;
+  }
+  return WAREHOUSE_NAME_MAP[id] || name || id;
+}
+
+/**
  * Tính toán số lượng tồn hiển thị cho khách/bán hàng (chỉ tính các kho includeInWebStock = true).
  * Quy tắc: Nếu tổng tồn kho web âm thì quy về 0.
  */
@@ -145,6 +208,29 @@ interface RawSeedItem {
   minStockAlert: number;
   isVisible: boolean;
   images: string[];
+
+/**
+ * Bản đồ chuyển đổi ID kỹ thuật sang tên tiếng Việt chuẩn của từng kho
+ */
+export const WAREHOUSE_NAME_MAP: Record<string, string> = {
+  wh_mn_pt: "Kho phụ tùng Miền Nam",
+  wh_mb_pt: "Kho phụ tùng Miền Bắc",
+  wh_bh_bienhoa: "Kho Biên Hòa",
+  wh_mn_bh: "Kho bảo hành MN",
+  wh_mb_bh: "Kho bảo hành MB",
+  wh_mn_tang: "Kho PT tặng theo xe MN",
+  wh_mb_tang: "Kho PT tặng theo xe MB",
+};
+
+/**
+ * Hàm lấy tên kho thân thiện, đảm bảo không bao giờ hiển thị mã kỹ thuật (wh_...)
+ */
+export function getFriendlyWarehouseName(id: string, name?: string): string {
+  if (name && !name.startsWith("wh_") && name !== id) {
+    return name;
+  }
+  return WAREHOUSE_NAME_MAP[id] || name || id;
+}
   customAttributes: Record<string, string | number>;
   warehouseStocks: Record<string, WarehouseStockDetail>;
 }
@@ -436,6 +522,29 @@ const RAW_SEED_DATA: RawSeedItem[] = [
 ];
 
 /**
+ * Bản đồ chuyển đổi ID kỹ thuật sang tên tiếng Việt chuẩn của từng kho
+ */
+export const WAREHOUSE_NAME_MAP: Record<string, string> = {
+  wh_mn_pt: "Kho phụ tùng Miền Nam",
+  wh_mb_pt: "Kho phụ tùng Miền Bắc",
+  wh_bh_bienhoa: "Kho Biên Hòa",
+  wh_mn_bh: "Kho bảo hành MN",
+  wh_mb_bh: "Kho bảo hành MB",
+  wh_mn_tang: "Kho PT tặng theo xe MN",
+  wh_mb_tang: "Kho PT tặng theo xe MB",
+};
+
+/**
+ * Hàm lấy tên kho thân thiện, đảm bảo không bao giờ hiển thị mã kỹ thuật (wh_...)
+ */
+export function getFriendlyWarehouseName(id: string, name?: string): string {
+  if (name && !name.startsWith("wh_") && name !== id) {
+    return name;
+  }
+  return WAREHOUSE_NAME_MAP[id] || name || id;
+}
+
+/**
  * Danh sách 15 sản phẩm phụ tùng hoàn chỉnh sau khi xử lý qua misa-parser
  */
 export const INITIAL_PARTS: Part[] = RAW_SEED_DATA.map((item) => {
@@ -511,6 +620,29 @@ export const INITIAL_INVENTORY_LOGS: InventoryLog[] = [
 ];
 
 /**
+ * Bản đồ chuyển đổi ID kỹ thuật sang tên tiếng Việt chuẩn của từng kho
+ */
+export const WAREHOUSE_NAME_MAP: Record<string, string> = {
+  wh_mn_pt: "Kho phụ tùng Miền Nam",
+  wh_mb_pt: "Kho phụ tùng Miền Bắc",
+  wh_bh_bienhoa: "Kho Biên Hòa",
+  wh_mn_bh: "Kho bảo hành MN",
+  wh_mb_bh: "Kho bảo hành MB",
+  wh_mn_tang: "Kho PT tặng theo xe MN",
+  wh_mb_tang: "Kho PT tặng theo xe MB",
+};
+
+/**
+ * Hàm lấy tên kho thân thiện, đảm bảo không bao giờ hiển thị mã kỹ thuật (wh_...)
+ */
+export function getFriendlyWarehouseName(id: string, name?: string): string {
+  if (name && !name.startsWith("wh_") && name !== id) {
+    return name;
+  }
+  return WAREHOUSE_NAME_MAP[id] || name || id;
+}
+
+/**
  * Lịch sử đồng bộ tệp MISA mẫu (MisaSyncLog)
  */
 export const INITIAL_SYNC_LOGS: MisaSyncLog[] = [
@@ -529,3 +661,26 @@ export const INITIAL_SYNC_LOGS: MisaSyncLog[] = [
     ],
   },
 ];
+
+/**
+ * Bản đồ chuyển đổi ID kỹ thuật sang tên tiếng Việt chuẩn của từng kho
+ */
+export const WAREHOUSE_NAME_MAP: Record<string, string> = {
+  wh_mn_pt: "Kho phụ tùng Miền Nam",
+  wh_mb_pt: "Kho phụ tùng Miền Bắc",
+  wh_bh_bienhoa: "Kho Biên Hòa",
+  wh_mn_bh: "Kho bảo hành MN",
+  wh_mb_bh: "Kho bảo hành MB",
+  wh_mn_tang: "Kho PT tặng theo xe MN",
+  wh_mb_tang: "Kho PT tặng theo xe MB",
+};
+
+/**
+ * Hàm lấy tên kho thân thiện, đảm bảo không bao giờ hiển thị mã kỹ thuật (wh_...)
+ */
+export function getFriendlyWarehouseName(id: string, name?: string): string {
+  if (name && !name.startsWith("wh_") && name !== id) {
+    return name;
+  }
+  return WAREHOUSE_NAME_MAP[id] || name || id;
+}

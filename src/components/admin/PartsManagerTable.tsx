@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { Part, Warehouse } from "@/types/inventory";
+import { getFriendlyWarehouseName } from "@/lib/seed-data";
 import { normalizeCode } from "@/lib/misa-parser";
 import * as XLSX from "xlsx";
 import { useToast } from "@/components/ui/Toast";
@@ -198,7 +199,7 @@ export function PartsManagerTable({
               <option value="all">Tất cả kho ({warehouses.length} kho)</option>
               {warehouses.map((wh) => (
                 <option key={wh.id} value={wh.id}>
-                  {wh.name} {wh.includeInWebStock ? "" : "(Nội bộ)"}
+                  {getFriendlyWarehouseName(wh.id, wh.name)} {wh.includeInWebStock ? "" : "(Nội bộ)"}
                 </option>
               ))}
             </select>

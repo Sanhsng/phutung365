@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Part, AttributeDefinition } from "@/types/inventory";
 import { useInventory } from "@/lib/store";
+import { getFriendlyWarehouseName } from "@/lib/seed-data";
 import { HighlightText } from "./HighlightText";
 import { PartSvgPlaceholder } from "./PartSvgPlaceholder";
 import { ImageZoomModal } from "./ImageZoomModal";
@@ -201,7 +202,7 @@ export function MasterDetailView({
             <option value="all">Tất cả kho ({parts.length} mã)</option>
             {warehouses.map((wh) => (
               <option key={wh.id} value={wh.id}>
-                {wh.name} ({warehouseCounts[wh.id] ?? 0} mã)
+                {getFriendlyWarehouseName(wh.id, wh.name)} ({warehouseCounts[wh.id] ?? 0} mã)
               </option>
             ))}
           </select>
@@ -688,7 +689,7 @@ export function MasterDetailView({
                     const stock = selectedPart.warehouseStocks[wh.id]?.stockQty ?? 0;
                     return (
                       <div key={wh.id} className="flex items-center justify-between text-slate-700 py-0.5">
-                        <span className="truncate">{wh.name}</span>
+                        <span className="truncate">{getFriendlyWarehouseName(wh.id, wh.name)}</span>
                         <span className="font-mono font-bold text-slate-900">
                           {stock > 0 ? `${stock} ${selectedPart.unit}` : "0"}
                         </span>

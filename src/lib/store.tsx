@@ -23,6 +23,8 @@ import {
   INITIAL_INVENTORY_LOGS,
   INITIAL_SYNC_LOGS,
   calculateDisplayStock,
+  WAREHOUSE_NAME_MAP,
+  getFriendlyWarehouseName,
 } from "./seed-data";
 import { normalizeCode, parseMisaRawItem } from "./misa-parser";
 import {
@@ -95,6 +97,7 @@ export interface InventoryContextValue {
       rawName: string;
       unit: string;
       warehouseId: string;
+      warehouseName?: string;
       openQty: number;
       inQty: number;
       outQty: number;
@@ -143,17 +146,42 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
       if (storedWarehouses) {
         const parsedWhs: Warehouse[] = JSON.parse(storedWarehouses);
-        // Tự động gộp kho mới từ INITIAL_WAREHOUSES (Kho Miền Bắc, Biên Hòa, v.v.)
-        const existingIds = new Set(parsedWhs.map((w) => w.id));
-        const mergedWhs = [...parsedWhs];
+        // Tự động chuẩn hóa / chữa lành tên kho (thay thế các mã kỹ thuật như wh_mb_bh bằng tên tiếng Việt chuẩn)
+        const healedWhs = parsedWhs.map((w) => {
+          const matchedInitial = INITIAL_WAREHOUSES.find((init) => init.id === w.id);
+          const friendlyName = getFriendlyWarehouseName(w.id, w.name);
+
+          return {
+            ...w,
+            name: friendlyName,
+            ...(matchedInitial && {
+              description: matchedInitial.description,
+              address: matchedInitial.address,
+              includeInWebStock:
+                typeof w.includeInWebStock === "boolean"
+                  ? w.includeInWebStock
+                  : matchedInitial.includeInWebStock,
+            }),
+          };
+        });
+
+        // Bổ sung các kho còn thiếu từ INITIAL_WAREHOUSES
+        const existingIds = new Set(healedWhs.map((w) => w.id));
         INITIAL_WAREHOUSES.forEach((initWh) => {
           if (!existingIds.has(initWh.id)) {
-            mergedWhs.push(initWh);
+            healedWhs.push(initWh);
           }
         });
-        setWarehouses(mergedWhs);
+
+        setWarehouses(healedWhs);
+        try {
+          localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(healedWhs));
+        } catch (_) {}
       } else {
         setWarehouses(INITIAL_WAREHOUSES);
+        try {
+          localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(INITIAL_WAREHOUSES));
+        } catch (_) {}
       }
       if (storedParts) setParts(JSON.parse(storedParts));
       if (storedAttrs) setAttributes(JSON.parse(storedAttrs));
@@ -603,6 +631,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         rawName: string;
         unit: string;
         warehouseId: string;
+        warehouseName?: string;
         openQty: number;
         inQty: number;
         outQty: number;
@@ -622,19 +651,43 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
       const updatedPartsList = [...parts];
 
-      // Đảm bảo tất cả các kho xuất hiện trong file đều được quản lý
+      // Đảm bảo tất cả các kho xuất hiện trong file đều được quản lý với tên tiếng Việt chuẩn
       let currentWarehouses = [...warehouses];
       let hasNewWh = false;
       items.forEach((it) => {
-        if (it.warehouseId && !currentWarehouses.some((w) => w.id === it.warehouseId)) {
-          const isInternal = it.warehouseId.includes("bh") || it.warehouseId.includes("tang");
-          const newWh: Warehouse = {
-            id: it.warehouseId,
-            name: it.warehouseId,
-            includeInWebStock: !isInternal,
-          };
-          currentWarehouses.push(newWh);
-          hasNewWh = true;
+        if (it.warehouseId) {
+          const existingIndex = currentWarehouses.findIndex((w) => w.id === it.warehouseId);
+          const matchedInitial = INITIAL_WAREHOUSES.find((w) => w.id === it.warehouseId);
+          const friendlyName =
+            matchedInitial?.name ||
+            WAREHOUSE_NAME_MAP[it.warehouseId] ||
+            it.warehouseName ||
+            it.warehouseId;
+
+          if (existingIndex >= 0) {
+            // Nếu tên kho đang là mã kỹ thuật wh_... thì sửa lại tên tiếng Việt ngay
+            if (
+              currentWarehouses[existingIndex].name.startsWith("wh_") ||
+              currentWarehouses[existingIndex].name === currentWarehouses[existingIndex].id
+            ) {
+              currentWarehouses[existingIndex] = {
+                ...currentWarehouses[existingIndex],
+                name: friendlyName,
+              };
+              hasNewWh = true;
+            }
+          } else {
+            const isInternal = it.warehouseId.includes("bh") || it.warehouseId.includes("tang");
+            const newWh: Warehouse = {
+              id: it.warehouseId,
+              name: friendlyName,
+              includeInWebStock: matchedInitial ? matchedInitial.includeInWebStock : !isInternal,
+              address: matchedInitial?.address,
+              description: matchedInitial?.description,
+            };
+            currentWarehouses.push(newWh);
+            hasNewWh = true;
+          }
         }
       });
       if (hasNewWh) {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useInventory } from "@/lib/store";
 import { Part } from "@/types/inventory";
 import { normalizeCode } from "@/lib/misa-parser";
+import { getFriendlyWarehouseName } from "@/lib/seed-data";
 import { MasterDetailView } from "@/components/storefront/MasterDetailView";
 import { MobileProductListItem } from "@/components/storefront/MobileProductListItem";
 import { TechnicalTableView } from "@/components/storefront/TechnicalTableView";
@@ -114,7 +115,7 @@ export default function StorefrontPage() {
   const warehouseOptions = useMemo(() => {
     return warehouses.map((wh) => ({
       id: wh.id,
-      name: wh.name,
+      name: getFriendlyWarehouseName(wh.id, wh.name),
       count: visibleParts.filter(
         (p) => (p.warehouseStocks?.[wh.id]?.stockQty ?? 0) > 0
       ).length,
@@ -248,7 +249,7 @@ export default function StorefrontPage() {
             <strong className="text-slate-900 font-semibold truncate max-w-[90px]">
               {selectedWarehouse === "all"
                 ? "Tất cả"
-                : warehouses.find((w) => w.id === selectedWarehouse)?.name.replace("Kho ", "") || "Kho"}
+                : getFriendlyWarehouseName(selectedWarehouse, warehouses.find((w) => w.id === selectedWarehouse)?.name).replace("Kho ", "") || "Kho"}
             </strong>
             <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
           </div>
