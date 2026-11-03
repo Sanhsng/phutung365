@@ -9,7 +9,7 @@ import {
 import { parseMisaRawItem, normalizeCode } from "./misa-parser";
 
 /**
- * Danh sách 3 kho hàng thực tế của chi nhánh Miền Nam
+ * Danh sách 7 kho hàng thực tế của công ty (đồng bộ chuẩn MISA AMIS)
  */
 export const INITIAL_WAREHOUSES: Warehouse[] = [
   {
@@ -20,18 +20,46 @@ export const INITIAL_WAREHOUSES: Warehouse[] = [
     description: "Kho tổng phân phối phụ tùng thương mại bán hàng toàn Miền Nam",
   },
   {
+    id: "wh_mb_pt",
+    name: "Kho phụ tùng Miền Bắc",
+    includeInWebStock: true,
+    address: "Khu công nghiệp Đài Tư, 386 Nguyễn Văn Linh, Sài Đồng, Long Biên, Hà Nội",
+    description: "Kho tổng phân phối phụ tùng thương mại bán hàng toàn Miền Bắc",
+  },
+  {
+    id: "wh_bh_bienhoa",
+    name: "Kho Biên Hòa",
+    includeInWebStock: true,
+    address: "Bãi máy Trung tâm bàn giao xe, Biên Hòa, Đồng Nai",
+    description: "Kho bãi trung tâm bàn giao xe & phụ tùng cơ giới Biên Hòa",
+  },
+  {
     id: "wh_mn_bh",
     name: "Kho bảo hành MN",
     includeInWebStock: false,
     address: "Xưởng dịch vụ kỹ thuật Miền Nam, P. Linh Trung, TP. Thủ Đức",
-    description: "Kho dự trữ phụ tùng phục vụ bảo hành, thay thế lưu động",
+    description: "Kho dự trữ phụ tùng phục vụ bảo hành, thay thế lưu động Miền Nam",
+  },
+  {
+    id: "wh_mb_bh",
+    name: "Kho bảo hành MB",
+    includeInWebStock: false,
+    address: "Xưởng dịch vụ kỹ thuật Miền Bắc, Long Biên, Hà Nội",
+    description: "Kho dự trữ phụ tùng phục vụ bảo hành, thay thế lưu động Miền Bắc",
   },
   {
     id: "wh_mn_tang",
     name: "Kho PT tặng theo xe MN",
     includeInWebStock: false,
     address: "Bãi máy Trung tâm bàn giao xe, Biên Hòa, Đồng Nai",
-    description: "Kho phụ tùng đi kèm gói khuyến mãi bàn giao theo máy mới",
+    description: "Kho phụ tùng đi kèm gói khuyến mãi bàn giao theo máy mới Miền Nam",
+  },
+  {
+    id: "wh_mb_tang",
+    name: "Kho PT tặng theo xe MB",
+    includeInWebStock: false,
+    address: "Bãi máy Trung tâm bàn giao xe, Long Biên, Hà Nội",
+    description: "Kho phụ tùng đi kèm gói khuyến mãi bàn giao theo máy mới Miền Bắc",
   },
 ];
 

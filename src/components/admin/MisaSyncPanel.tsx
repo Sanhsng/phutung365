@@ -235,11 +235,78 @@ export function MisaSyncPanel({
   };
 
   // --- 2. SMART EXCEL IMPORT LOGIC (SheetJS) ---
-  const mapWarehouseNameToId = (whText: string): string => {
-    const lower = whText.toLowerCase();
-    if (lower.includes("bảo hành") || lower.includes("bao hanh")) return "wh_mn_bh";
-    if (lower.includes("tặng") || lower.includes("tang") || lower.includes("xe")) return "wh_mn_tang";
-    return "wh_mn_pt"; // Mặc định Kho phụ tùng Miền Nam
+  const mapWarehouseNameToId = (whText: string): { id: string; name: string } => {
+    // Tách bỏ tiền tố "Tên kho:" hoặc "Kho:" nếu có
+    const cleaned = whText
+      .replace(/^(tên\s+kho\s*:|kho\s*:)/i, "")
+      .trim();
+
+    const lower = cleaned.toLowerCase();
+
+    // 1. So khớp chính xác hoặc gần đúng với danh sách kho đang có trong hệ thống
+    const exactWh = warehouses.find(
+      (w) => w.name.toLowerCase() === lower || lower === w.name.toLowerCase()
+    );
+    if (exactWh) {
+      return { id: exactWh.id, name: exactWh.name };
+    }
+
+    // 2. Phân loại chuẩn xác 7 kho thực tế từ MISA AMIS
+    if (
+      lower.includes("bảo hành mb") ||
+      lower.includes("bao hanh mb") ||
+      (lower.includes("bảo hành") && (lower.includes("mb") || lower.includes("bắc")))
+    ) {
+      return { id: "wh_mb_bh", name: "Kho bảo hành MB" };
+    }
+    if (
+      lower.includes("bảo hành mn") ||
+      lower.includes("bao hanh mn") ||
+      (lower.includes("bảo hành") && (lower.includes("mn") || lower.includes("nam")))
+    ) {
+      return { id: "wh_mn_bh", name: "Kho bảo hành MN" };
+    }
+    if (lower.includes("biên hòa") || lower.includes("bien hoa")) {
+      return { id: "wh_bh_bienhoa", name: "Kho Biên Hòa" };
+    }
+    if (
+      lower.includes("tặng theo xe mb") ||
+      (lower.includes("tặng") && (lower.includes("mb") || lower.includes("bắc")))
+    ) {
+      return { id: "wh_mb_tang", name: "Kho PT tặng theo xe MB" };
+    }
+    if (
+      lower.includes("tặng theo xe mn") ||
+      (lower.includes("tặng") && (lower.includes("mn") || lower.includes("nam")))
+    ) {
+      return { id: "wh_mn_tang", name: "Kho PT tặng theo xe MN" };
+    }
+    if (
+      lower.includes("miền bắc") ||
+      lower.includes("mien bac") ||
+      lower.includes("hà nội") ||
+      (lower.includes("phụ tùng") && lower.includes("mb"))
+    ) {
+      return { id: "wh_mb_pt", name: "Kho phụ tùng Miền Bắc" };
+    }
+    if (
+      lower.includes("miền nam") ||
+      lower.includes("mien nam") ||
+      lower.includes("sài gòn") ||
+      (lower.includes("phụ tùng") && lower.includes("mn"))
+    ) {
+      return { id: "wh_mn_pt", name: "Kho phụ tùng Miền Nam" };
+    }
+
+    // 3. Fallback: Nếu xuất hiện kho mới chưa từng khai báo, tự tạo ID slug và giữ nguyên tên từ MISA
+    const fallbackName = cleaned || "Kho phụ tùng";
+    const slug =
+      "wh_" +
+      normalizeCode(fallbackName)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "_")
+        .substring(0, 20);
+    return { id: slug, name: fallbackName };
   };
 
   const getWarehouseNameById = (id: string): string => {
@@ -312,6 +379,7 @@ export function MisaSyncPanel({
 
         // Ngữ cảnh kho mặc định ban đầu
         let currentWarehouseId = "wh_mn_pt";
+        let currentWarehouseName = "Kho phụ tùng Miền Nam";
         const parsedRows: ParsedExcelRow[] = [];
 
         // Tạo map để kiểm tra mã đã tồn tại
@@ -325,14 +393,18 @@ export function MisaSyncPanel({
           const rawCode = String(row[colMap.code] || "").trim();
           const rawName = String(row[colMap.name] || "").trim();
 
-          // 1. Kiểm tra dòng chuyển kho: "Tên kho: Kho bảo hành MN"
-          if (
+          // 1. Kiểm tra dòng chuyển kho: "Tên kho: Kho bảo hành MB"
+          const isWarehouseRow =
             rawCode.toLowerCase().startsWith("tên kho:") ||
             rawCode.toLowerCase().startsWith("kho:") ||
-            rawName.toLowerCase().startsWith("tên kho:")
-          ) {
-            const combinedText = `${rawCode} ${rawName}`;
-            currentWarehouseId = mapWarehouseNameToId(combinedText);
+            rawName.toLowerCase().startsWith("tên kho:") ||
+            rawName.toLowerCase().startsWith("kho:");
+
+          if (isWarehouseRow) {
+            const combinedText = `${rawCode} ${rawName}`.trim();
+            const wh = mapWarehouseNameToId(combinedText);
+            currentWarehouseId = wh.id;
+            currentWarehouseName = wh.name;
             continue;
           }
 
@@ -363,7 +435,7 @@ export function MisaSyncPanel({
             rawName,
             unit,
             warehouseId: currentWarehouseId,
-            warehouseName: getWarehouseNameById(currentWarehouseId),
+            warehouseName: currentWarehouseName,
             openQty,
             inQty,
             outQty,

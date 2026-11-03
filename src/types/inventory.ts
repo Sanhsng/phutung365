@@ -1,7 +1,11 @@
 export type WarehouseName =
   | "Kho phụ tùng Miền Nam"
+  | "Kho phụ tùng Miền Bắc"
+  | "Kho Biên Hòa"
   | "Kho bảo hành MN"
+  | "Kho bảo hành MB"
   | "Kho PT tặng theo xe MN"
+  | "Kho PT tặng theo xe MB"
   | (string & {});
 
 export interface Warehouse {

@@ -141,7 +141,20 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       const storedSyncLogs = localStorage.getItem(STORAGE_KEYS.SYNC_LOGS);
       const storedHotline = localStorage.getItem(STORAGE_KEYS.HOTLINE);
 
-      if (storedWarehouses) setWarehouses(JSON.parse(storedWarehouses));
+      if (storedWarehouses) {
+        const parsedWhs: Warehouse[] = JSON.parse(storedWarehouses);
+        // Tự động gộp kho mới từ INITIAL_WAREHOUSES (Kho Miền Bắc, Biên Hòa, v.v.)
+        const existingIds = new Set(parsedWhs.map((w) => w.id));
+        const mergedWhs = [...parsedWhs];
+        INITIAL_WAREHOUSES.forEach((initWh) => {
+          if (!existingIds.has(initWh.id)) {
+            mergedWhs.push(initWh);
+          }
+        });
+        setWarehouses(mergedWhs);
+      } else {
+        setWarehouses(INITIAL_WAREHOUSES);
+      }
       if (storedParts) setParts(JSON.parse(storedParts));
       if (storedAttrs) setAttributes(JSON.parse(storedAttrs));
       if (storedInvLogs) setInventoryLogs(JSON.parse(storedInvLogs));
@@ -609,6 +622,28 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
       const updatedPartsList = [...parts];
 
+      // Đảm bảo tất cả các kho xuất hiện trong file đều được quản lý
+      let currentWarehouses = [...warehouses];
+      let hasNewWh = false;
+      items.forEach((it) => {
+        if (it.warehouseId && !currentWarehouses.some((w) => w.id === it.warehouseId)) {
+          const isInternal = it.warehouseId.includes("bh") || it.warehouseId.includes("tang");
+          const newWh: Warehouse = {
+            id: it.warehouseId,
+            name: it.warehouseId,
+            includeInWebStock: !isInternal,
+          };
+          currentWarehouses.push(newWh);
+          hasNewWh = true;
+        }
+      });
+      if (hasNewWh) {
+        setWarehouses(currentWarehouses);
+        try {
+          localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(currentWarehouses));
+        } catch (_) {}
+      }
+
       for (const item of items) {
         if (item.stockQty < 0) negativeCount++;
 
@@ -630,7 +665,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
             stockQty: item.stockQty,
           };
 
-          const totalDisplayStock = calculateDisplayStock(existingStocks, warehouses);
+          const totalDisplayStock = calculateDisplayStock(existingStocks, currentWarehouses);
 
           // Cập nhật trong mảng
           const idx = updatedPartsList.findIndex((p) => p.id === existing.id);
@@ -655,7 +690,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
             },
           };
 
-          const totalDisplayStock = calculateDisplayStock(stocks, warehouses);
+          const totalDisplayStock = calculateDisplayStock(stocks, currentWarehouses);
 
           const newPart: Part = {
             id: `part-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
