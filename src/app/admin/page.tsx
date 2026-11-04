@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
     if (password === "adminphutung365") {
       setIsAuthenticated(true);
       sessionStorage.setItem("phutung_admin_auth", "true");
-      toast.success("Đăng nhập thành công", "Chào mừng Olivia / Quản trị viên");
+      toast.success("Đăng nhập thành công", "Chào mừng bạn / Quản trị viên");
       return true;
     }
     toast.error("Mật khẩu không chính xác", "Vui lòng nhập lại (mặc định: admin123)");
@@ -281,9 +281,9 @@ export default function AdminDashboardPage() {
             <div
               onClick={handleLogout}
               className="h-9 w-9 rounded-full bg-[#0e1726] text-white flex items-center justify-center font-bold text-xs cursor-pointer shadow-md hover:opacity-90"
-              title="Olivia (Bấm để đăng xuất)"
+              title="Admin (Bấm để đăng xuất)"
             >
-              OL
+              AD
             </div>
           </div>
         </div>
@@ -456,11 +456,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("overview");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-bold transition-all ${
-                      activeMenu === "overview"
-                        ? "bg-[#ffc000] text-slate-950 shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-bold transition-all ${activeMenu === "overview"
+                      ? "bg-[#ffc000] text-slate-950 shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <TrendingUp className="h-4 w-4" />
                     <span>Tổng quan kho</span>
@@ -472,11 +471,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("attributes");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${
-                      activeMenu === "attributes"
-                        ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${activeMenu === "attributes"
+                      ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <Layers className="h-4 w-4" />
                     <span>Thuộc tính kỹ thuật</span>
@@ -488,11 +486,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("logs");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${
-                      activeMenu === "logs"
-                        ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${activeMenu === "logs"
+                      ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <CheckSquare className="h-4 w-4" />
                     <span>Lịch sử biến động kho</span>
@@ -504,11 +501,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("misa");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${
-                      activeMenu === "misa"
-                        ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${activeMenu === "misa"
+                      ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <PieChart className="h-4 w-4" />
                     <span>Đồng bộ MISA AMIS</span>
@@ -520,11 +516,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("notifications");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 font-medium transition-all ${
-                      activeMenu === "notifications"
-                        ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 font-medium transition-all ${activeMenu === "notifications"
+                      ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <span className="flex items-center gap-2.5">
                       <Bell className="h-4 w-4" />
@@ -541,11 +536,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("analytics");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${
-                      activeMenu === "analytics"
-                        ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${activeMenu === "analytics"
+                      ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <TrendingUp className="h-4 w-4" />
                     <span>Báo cáo phân tích</span>
@@ -557,11 +551,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("saved_reports");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${
-                      activeMenu === "saved_reports"
-                        ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${activeMenu === "saved_reports"
+                      ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <FileText className="h-4 w-4" />
                     <span>Báo cáo đã lưu</span>
@@ -573,11 +566,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("scheduled_reports");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${
-                      activeMenu === "scheduled_reports"
-                        ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${activeMenu === "scheduled_reports"
+                      ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <Clock className="h-4 w-4" />
                     <span>Lịch trình báo cáo</span>
@@ -589,11 +581,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("user_reports");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${
-                      activeMenu === "user_reports"
-                        ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${activeMenu === "user_reports"
+                      ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <UserCheck className="h-4 w-4" />
                     <span>Báo cáo người dùng</span>
@@ -605,11 +596,10 @@ export default function AdminDashboardPage() {
                       setActiveMenu("manage_notifications");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${
-                      activeMenu === "manage_notifications"
-                        ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-medium transition-all ${activeMenu === "manage_notifications"
+                      ? "bg-[#ffc000] text-slate-950 font-bold shadow-xs"
+                      : "text-slate-600 hover:bg-slate-50"
+                      }`}
                   >
                     <Settings className="h-4 w-4" />
                     <span>Quản lý thông báo</span>

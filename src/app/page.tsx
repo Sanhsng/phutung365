@@ -40,11 +40,11 @@ export default function StorefrontPage() {
   const [selectedWarehouse, setSelectedWarehouse] = useState("all");
   const [onlyInStock, setOnlyInStock] = useState(false);
 
-  // Top Canvas Capsule Navigation Tab (Image 1 Style): "products" | "price_lists" | "stock_adjustments"
-  const [topTab, setTopTab] = useState<"products" | "price_lists" | "stock_adjustments">("products");
+  // Top Canvas Capsule Navigation Tab (Mặc định vào tab Danh Sách Chi Tiết): "products" | "price_lists" | "stock_adjustments"
+  const [topTab, setTopTab] = useState<"products" | "price_lists" | "stock_adjustments">("price_lists");
 
-  // Desktop View Mode: "master" (Image 1 default) | "grid" | "table"
-  const [viewMode, setViewMode] = useState<"master" | "grid" | "table">("master");
+  // Desktop View Mode: "master" | "grid" | "table" (Mặc định hiển thị bảng Danh Sách Chi Tiết)
+  const [viewMode, setViewMode] = useState<"master" | "grid" | "table">("table");
 
   // Mobile Filter Sheet
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -126,8 +126,8 @@ export default function StorefrontPage() {
     return attributes.filter((attr) => attr.isPublic);
   }, [attributes]);
 
-  // Filter logic
-  const filteredParts = useMemo(() => {
+  // Bộ lọc danh mục, dòng máy, từ khóa tìm kiếm (chưa áp dụng kho)
+  const partsMatchingFilters = useMemo(() => {
     const rawQuery = searchQuery.trim().toLowerCase();
     const cleanQuery = normalizeCode(searchQuery);
 
@@ -137,10 +137,6 @@ export default function StorefrontPage() {
       }
       if (selectedModel !== "Tất cả" && !part.compatibleModels.includes(selectedModel)) {
         return false;
-      }
-      if (selectedWarehouse !== "all") {
-        const whStock = part.warehouseStocks?.[selectedWarehouse]?.stockQty ?? 0;
-        if (whStock <= 0) return false;
       }
       if (onlyInStock && part.totalDisplayStock <= 0) {
         return false;
@@ -164,7 +160,16 @@ export default function StorefrontPage() {
         part.compatibleModels.some((m) => m.toLowerCase().includes(rawQuery))
       );
     });
-  }, [visibleParts, searchQuery, selectedCategory, selectedModel, selectedWarehouse, onlyInStock]);
+  }, [visibleParts, searchQuery, selectedCategory, selectedModel, onlyInStock]);
+
+  // Danh sách sau khi áp dụng kho được chọn
+  const filteredParts = useMemo(() => {
+    if (selectedWarehouse === "all") return partsMatchingFilters;
+    return partsMatchingFilters.filter((part) => {
+      const whStock = part.warehouseStocks?.[selectedWarehouse]?.stockQty ?? 0;
+      return whStock > 0;
+    });
+  }, [partsMatchingFilters, selectedWarehouse]);
 
   if (!isLoaded) {
     return (
@@ -451,10 +456,14 @@ export default function StorefrontPage() {
             {(topTab === "price_lists" || viewMode === "table") && (
               <TechnicalTableView
                 parts={filteredParts}
+                allParts={partsMatchingFilters}
                 searchQuery={searchQuery}
                 onOpenDetail={(p) => setSelectedPart(p)}
                 onAddToCart={(p) => handleAddToCart(p)}
                 cartItemIds={cartItemIds}
+                warehouses={warehouses}
+                selectedWarehouse={selectedWarehouse}
+                onSelectWarehouse={setSelectedWarehouse}
               />
             )}
           </div>
