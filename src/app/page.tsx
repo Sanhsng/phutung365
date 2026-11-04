@@ -53,7 +53,7 @@ export default function StorefrontPage() {
   const [selectedPart, setSelectedPart] = useState<Part | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<QuoteCartItem[]>([]);
-  const [showSearchInput, setShowSearchInput] = useState(false);
+  const [showSearchInput, setShowSearchInput] = useState(true);
 
   // Tải giỏ hàng từ localStorage
   useEffect(() => {
@@ -357,11 +357,14 @@ export default function StorefrontPage() {
                   />
                   <button
                     onClick={() => {
-                      setShowSearchInput(false);
-                      setSearchQuery("");
+                      if (searchQuery) {
+                        setSearchQuery("");
+                      } else {
+                        setShowSearchInput(false);
+                      }
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full"
-                    title="Đóng tìm kiếm"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
+                    title={searchQuery ? "Xóa từ khóa tìm kiếm" : "Thu gọn ô tìm kiếm"}
                   >
                     <X className="h-4 w-4" />
                   </button>
