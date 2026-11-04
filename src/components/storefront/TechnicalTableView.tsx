@@ -163,20 +163,18 @@ export function TechnicalTableView({
           {/* Nút: Tất cả kho */}
           <button
             onClick={() => handleSelectWarehouse("all")}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-              activeWarehouse === "all"
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${activeWarehouse === "all"
                 ? "bg-slate-950 text-white shadow-xs font-bold"
                 : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-            }`}
+              }`}
           >
             <Boxes className="h-3.5 w-3.5" />
             <span>Tất cả kho</span>
             <span
-              className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold ${
-                activeWarehouse === "all"
+              className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold ${activeWarehouse === "all"
                   ? "bg-white/20 text-white"
                   : "bg-slate-100 text-slate-600"
-              }`}
+                }`}
             >
               {totalAllCount}
             </span>
@@ -192,26 +190,19 @@ export function TechnicalTableView({
               <button
                 key={wh.id}
                 onClick={() => handleSelectWarehouse(wh.id)}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all cursor-pointer ${
-                  isSelected
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all cursor-pointer ${isSelected
                     ? "bg-[#fcb710] text-slate-950 font-bold shadow-xs border border-amber-500 ring-2 ring-amber-400/30"
                     : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 font-medium"
-                }`}
-              >
-                <MapPin
-                  className={`h-3.5 w-3.5 ${
-                    isSelected ? "text-slate-950" : "text-amber-500"
                   }`}
-                />
+              >
                 <span>{friendlyName}</span>
                 <span
-                  className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold ${
-                    isSelected
+                  className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold ${isSelected
                       ? "bg-black/15 text-slate-950"
                       : count > 0
-                      ? "bg-amber-50 text-amber-800 border border-amber-200/60"
-                      : "bg-slate-100 text-slate-400"
-                  }`}
+                        ? "bg-amber-50 text-amber-800 border border-amber-200/60"
+                        : "bg-slate-100 text-slate-400"
+                    }`}
                 >
                   {count}
                 </span>
@@ -410,11 +401,10 @@ export function TechnicalTableView({
 
                           <button
                             onClick={(e) => handleAdd(part, e)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all ${
-                              isInCart
+                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all ${isInCart
                                 ? "bg-emerald-600 text-white"
                                 : "btn-lonking"
-                            }`}
+                              }`}
                             title="Thêm vào danh sách hỏi giá"
                           >
                             {isInCart ? (
