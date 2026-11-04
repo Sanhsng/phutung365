@@ -343,7 +343,7 @@ export default function StorefrontPage() {
                   : "text-slate-900/80 hover:text-slate-950 hover:bg-white/20"
                   }`}
               >
-                Danh Mục Phụ Tùng
+                Danh Sách Chi Tiết
               </button>
 
               <button
@@ -356,7 +356,7 @@ export default function StorefrontPage() {
                   : "text-slate-900/80 hover:text-slate-950 hover:bg-white/20"
                   }`}
               >
-                Danh Sách Chi Tiết
+                Danh Mục Phụ Tùng
               </button>
             </div>
 

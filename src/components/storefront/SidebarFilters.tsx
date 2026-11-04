@@ -122,11 +122,10 @@ export function SidebarFilters({
                 {/* Tất cả kho */}
                 <button
                   onClick={() => onSelectWarehouse("all")}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
-                    selectedWarehouse === "all"
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${selectedWarehouse === "all"
                       ? "btn-lonking text-slate-950 font-bold shadow-xs"
                       : "text-slate-600 hover:bg-slate-50 font-medium"
-                  }`}
+                    }`}
                 >
                   <span className="truncate">Tất cả kho</span>
                   <span className="text-[10px] font-mono text-slate-500 font-semibold">
@@ -139,11 +138,10 @@ export function SidebarFilters({
                   <button
                     key={wh.id}
                     onClick={() => onSelectWarehouse(wh.id)}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
-                      selectedWarehouse === wh.id
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${selectedWarehouse === wh.id
                         ? "btn-lonking text-slate-950 font-bold shadow-xs"
                         : "text-slate-600 hover:bg-slate-50 font-medium"
-                    }`}
+                      }`}
                   >
                     <span className="truncate">{getFriendlyWarehouseName(wh.id, wh.name)}</span>
                     <span className="text-[10px] font-mono text-slate-500 font-semibold">
@@ -322,7 +320,7 @@ export function SidebarFilters({
                   onClick={() => setShowAllBrands(!showAllBrands)}
                   className="w-full text-center py-1 text-[11px] font-semibold text-lonking-600 hover:underline"
                 >
-                  {showAllBrands ? "Thu gọn" : `+ Xem thêm ${brands.length - 6} hãng`}
+                  {showAllBrands ? "Thu gọn" : `=> Xem thêm ${brands.length - 6} hãng`}
                 </button>
               )}
             </div>
