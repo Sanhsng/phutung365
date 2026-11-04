@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Part, Warehouse } from "@/types/inventory";
 import { getFriendlyWarehouseName } from "@/lib/seed-data";
-import { normalizeCode } from "@/lib/misa-parser";
+import { normalizeCode, matchesPartSearch } from "@/lib/misa-parser";
 import * as XLSX from "xlsx";
 import { useToast } from "@/components/ui/Toast";
 import {
@@ -58,9 +58,6 @@ export function PartsManagerTable({
   }, [parts]);
 
   const filteredParts = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    const cleanQ = normalizeCode(searchQuery);
-
     return parts.filter((part) => {
       if (selectedCategory !== "all" && part.category !== selectedCategory) {
         return false;
@@ -80,25 +77,9 @@ export function PartsManagerTable({
         if (!hasNegative) return false;
       }
 
-      if (!q && !cleanQ) return true;
-
-      if (cleanQ && part.partNumberClean.includes(cleanQ)) return true;
-      if (
-        part.crossRefNumbers.some((ref) =>
-          normalizeCode(ref).includes(cleanQ)
-        )
-      ) {
-        return true;
-      }
-
-      return (
-        part.name.toLowerCase().includes(q) ||
-        part.misaRawCode.toLowerCase().includes(q) ||
-        part.brand.toLowerCase().includes(q) ||
-        part.compatibleModels.some((m) => m.toLowerCase().includes(q))
-      );
+      return matchesPartSearch(part, searchQuery);
     });
-  }, [parts, searchQuery, selectedCategory, statusFilter]);
+  }, [parts, searchQuery, selectedCategory, selectedWarehouse, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredParts.length / pageSize));
   const paginatedParts = useMemo(() => {

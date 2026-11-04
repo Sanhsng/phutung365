@@ -80,6 +80,105 @@ export function normalizeCode(str: string): string {
 }
 
 /**
+ * Chuyển đổi chuỗi tiếng Việt có dấu thành không dấu, viết thường.
+ * Dùng cho tìm kiếm không dấu, tìm kiếm gần đúng tiếng Việt.
+ * 
+ * Ví dụ: "Rơ le tắt máy" -> "ro le tat may"
+ *        "Bót lái thủy lực 855" -> "bot lai thuy luc 855"
+ */
+export function removeVietnameseTones(str: string): string {
+  if (!str) return "";
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .toLowerCase();
+}
+
+export interface SearchablePart {
+  partNumber: string;
+  partNumberClean?: string;
+  misaRawCode?: string;
+  name: string;
+  category?: string;
+  brand?: string;
+  crossRefNumbers?: string[];
+  compatibleModels?: string[];
+}
+
+/**
+ * Kiểm tra phụ tùng có khớp với từ khóa tìm kiếm hay không.
+ * Tối ưu hóa toàn diện cho người dùng Việt Nam:
+ * 1. Tìm tiếng Việt CÓ DẤU hoặc KHÔNG DẤU (ví dụ: "bot lai" -> "Bót lái", "ro le" -> "Rơ le", "ty gau" -> "ty gàu")
+ * 2. Tìm theo mã phụ tùng thô hoặc mã đã chuẩn hóa (bỏ dấu gạch ngang, dấu chấm, dấu cách)
+ * 3. Tìm theo từng từ rời rạc (tất cả các từ trong ô tìm kiếm đều phải xuất hiện trong phụ tùng)
+ * 4. Tìm theo dòng máy tương thích, thương hiệu, danh mục, mã thay thế
+ */
+export function matchesPartSearch(part: SearchablePart, query: string): boolean {
+  if (!query || !query.trim()) return true;
+
+  const rawQuery = query.trim().toLowerCase();
+  const cleanQuery = normalizeCode(query);
+  const normalizedQuery = removeVietnameseTones(query).trim();
+
+  // 1. Khớp mã sạch (clean code) không phân biệt ký tự đặc biệt
+  if (cleanQuery) {
+    if (part.partNumberClean && part.partNumberClean.includes(cleanQuery)) {
+      return true;
+    }
+    if (part.crossRefNumbers && part.crossRefNumbers.some((ref) => normalizeCode(ref).includes(cleanQuery))) {
+      return true;
+    }
+    if (part.misaRawCode && normalizeCode(part.misaRawCode).includes(cleanQuery)) {
+      return true;
+    }
+    if (normalizeCode(part.partNumber).includes(cleanQuery)) {
+      return true;
+    }
+  }
+
+  // 2. Gom toàn bộ thông tin phụ tùng thành chuỗi tìm kiếm
+  const textElements: string[] = [
+    part.partNumber,
+    part.misaRawCode || "",
+    part.name,
+    part.category || "",
+    part.brand || "",
+    ...(part.crossRefNumbers || []),
+    ...(part.compatibleModels || []),
+  ];
+
+  const searchableText = textElements.filter(Boolean).join(" ");
+
+  // Kiểm tra chuỗi thô (giữ nguyên dấu)
+  const searchableLower = searchableText.toLowerCase();
+  if (searchableLower.includes(rawQuery)) {
+    return true;
+  }
+
+  // Kiểm tra chuỗi sau khi loại bỏ dấu tiếng Việt (Accent-insensitive)
+  const searchableWithoutTones = removeVietnameseTones(searchableText);
+  if (searchableWithoutTones.includes(normalizedQuery)) {
+    return true;
+  }
+
+  // 3. Tách từ khóa thành các token rời rạc: mọi token phải xuất hiện trong phụ tùng
+  // Ví dụ người dùng gõ: "bot lai 855" -> ["bot", "lai", "855"]
+  // "Bót lái thủy lực 855" chứa đủ cả 3 token nên sẽ khớp!
+  const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+  if (tokens.length > 1) {
+    const allTokensMatch = tokens.every((token) =>
+      searchableWithoutTones.includes(token)
+    );
+    if (allTokensMatch) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Xóa tiền tố kế toán MISA khỏi mã phụ tùng thô.
  */
 export function stripMisaPrefix(rawCode: string): string {

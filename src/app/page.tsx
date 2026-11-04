@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useInventory } from "@/lib/store";
 import { Part } from "@/types/inventory";
-import { normalizeCode } from "@/lib/misa-parser";
+import { normalizeCode, matchesPartSearch } from "@/lib/misa-parser";
 import { getFriendlyWarehouseName } from "@/lib/seed-data";
 import { MasterDetailView } from "@/components/storefront/MasterDetailView";
 import { MobileProductListItem } from "@/components/storefront/MobileProductListItem";
@@ -128,9 +128,6 @@ export default function StorefrontPage() {
 
   // Bộ lọc danh mục, dòng máy, từ khóa tìm kiếm (chưa áp dụng kho)
   const partsMatchingFilters = useMemo(() => {
-    const rawQuery = searchQuery.trim().toLowerCase();
-    const cleanQuery = normalizeCode(searchQuery);
-
     return visibleParts.filter((part) => {
       if (selectedCategory !== "Tất cả" && part.category !== selectedCategory) {
         return false;
@@ -142,23 +139,7 @@ export default function StorefrontPage() {
         return false;
       }
 
-      if (!rawQuery && !cleanQuery) return true;
-
-      if (cleanQuery && part.partNumberClean.includes(cleanQuery)) return true;
-      if (
-        part.crossRefNumbers.some((ref) =>
-          normalizeCode(ref).includes(cleanQuery)
-        )
-      ) {
-        return true;
-      }
-
-      return (
-        part.name.toLowerCase().includes(rawQuery) ||
-        part.misaRawCode.toLowerCase().includes(rawQuery) ||
-        part.brand.toLowerCase().includes(rawQuery) ||
-        part.compatibleModels.some((m) => m.toLowerCase().includes(rawQuery))
-      );
+      return matchesPartSearch(part, searchQuery);
     });
   }, [visibleParts, searchQuery, selectedCategory, selectedModel, onlyInStock]);
 

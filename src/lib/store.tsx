@@ -26,7 +26,7 @@ import {
   WAREHOUSE_NAME_MAP,
   getFriendlyWarehouseName,
 } from "./seed-data";
-import { normalizeCode, parseMisaRawItem } from "./misa-parser";
+import { normalizeCode, parseMisaRawItem, matchesPartSearch } from "./misa-parser";
 import {
   fetchAllDataFromSupabase,
   upsertPartInSupabase,
@@ -910,15 +910,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Tìm kiếm phụ tùng hỗ trợ tìm kiếm 1 phần mã không dấu nối, mã cross-ref, tên, model
+  // Tìm kiếm phụ tùng hỗ trợ tìm kiếm 1 phần mã không dấu nối, mã cross-ref, tên có dấu hoặc không dấu
   const searchParts = useCallback(
     (
       query: string,
       options?: { showHidden?: boolean; warehouseId?: string; category?: string }
     ): Part[] => {
-      const cleanQuery = normalizeCode(query);
-      const textQuery = query.trim().toLowerCase();
-
       return parts.filter((part) => {
         // Lọc ẩn/hiện
         if (!options?.showHidden && !part.isVisible) {
@@ -936,44 +933,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           if (stock <= 0) return false;
         }
 
-        // Nếu không có từ khóa tìm kiếm -> trả về true
-        if (!textQuery && !cleanQuery) return true;
-
-        // 1. Khớp mã clean chính hoặc 1 phần mã clean chính
-        if (cleanQuery && part.partNumberClean.includes(cleanQuery)) {
-          return true;
-        }
-
-        // 2. Khớp mã tham chiếu chéo (crossRefNumbers)
-        for (const ref of part.crossRefNumbers) {
-          if (normalizeCode(ref).includes(cleanQuery)) {
-            return true;
-          }
-        }
-
-        // 3. Khớp tên vật tư
-        if (part.name.toLowerCase().includes(textQuery)) {
-          return true;
-        }
-
-        // 4. Khớp thương hiệu
-        if (part.brand.toLowerCase().includes(textQuery)) {
-          return true;
-        }
-
-        // 5. Khớp model máy tương thích
-        for (const model of part.compatibleModels) {
-          if (model.toLowerCase().includes(textQuery)) {
-            return true;
-          }
-        }
-
-        // 6. Khớp mã MISA thô
-        if (part.misaRawCode.toLowerCase().includes(textQuery)) {
-          return true;
-        }
-
-        return false;
+        return matchesPartSearch(part, query);
       });
     },
     [parts]
